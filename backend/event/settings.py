@@ -209,12 +209,10 @@ DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'noreply@eventinvite.c
 
 # Celery Configuration
 CELERY_BROKER_URL = os.environ.get(
-    'CELERY_BROKER_URL',
-    'redis://default:S39xrIf9YVMxVmZi60VxvW48IZnff0QK@redis-14199.c325.us-east-1-4.ec2.cloud.redislabs.com:14199'
+    'CELERY_BROKER_URL'
 )
 CELERY_RESULT_BACKEND = os.environ.get(
-    'CELERY_RESULT_BACKEND',
-    'redis://default:S39xrIf9YVMxVmZi60VxvW48IZnff0QK@redis-14199.c325.us-east-1-4.ec2.cloud.redislabs.com:14199'
+    'CELERY_RESULT_BACKEND'
 )
 CELERY_ACCEPT_CONTENT = ['application/json']
 CELERY_TASK_SERIALIZER = 'json'
