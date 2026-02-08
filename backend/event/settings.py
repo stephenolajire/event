@@ -171,7 +171,8 @@ SIMPLE_JWT = {
 # CORS Settings
 CORS_ALLOWED_ORIGINS = os.environ.get(
     'CORS_ALLOWED_ORIGINS',
-    'http://localhost:5173,http://localhost:8080'
+    'http://localhost:5173,http://localhost:8080',
+    'https://event-h4rw.onrender.com'
 ).split(',')
 
 APPEND_SLASH = False
