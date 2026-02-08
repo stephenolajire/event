@@ -56,4 +56,4 @@ celerybeat-schedule
 celerybeat.pid
 
 # QR Code images (if stored locally)
-qr_codes/
+# qr_codes/
