@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Event Invitation</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f4f4f4;
+            line-height: 1.6;
+        }
+        .email-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 40px 20px;
+            text-align: center;
+            color: #ffffff;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: 600;
+        }
+        .content {
+            padding: 40px 30px;
+        }
+        .greeting {
+            font-size: 18px;
+            color: #333333;
+            margin-bottom: 20px;
+        }
+        .event-details {
+            background-color: #f8f9fa;
+            border-left: 4px solid #667eea;
+            padding: 20px;
+            margin: 30px 0;
+            border-radius: 4px;
+        }
+        .event-details h2 {
+            margin: 0 0 15px 0;
+            color: #333333;
+            font-size: 24px;
+        }
+        .detail-row {
+            margin: 10px 0;
+            color: #555555;
+            font-size: 15px;
+        }
+        .detail-row strong {
+            color: #333333;
+            display: inline-block;
+            width: 100px;
+        }
+        .qr-section {
+            text-align: center;
+            margin: 30px 0;
+            padding: 30px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+        }
+        .qr-section h3 {
+            margin: 0 0 15px 0;
+            color: #333333;
+            font-size: 18px;
+        }
+        .qr-section p {
+            color: #666666;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+        .qr-button {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #ffffff;
+            text-decoration: none;
+            padding: 14px 32px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 16px;
+            margin-top: 10px;
+            transition: transform 0.2s;
+        }
+        .qr-button:hover {
+            transform: translateY(-2px);
+        }
+        .message {
+            color: #555555;
+            font-size: 15px;
+            line-height: 1.8;
+            margin: 20px 0;
+        }
+        .footer {
+            background-color: #f8f9fa;
+            padding: 30px;
+            text-align: center;
+            color: #888888;
+            font-size: 13px;
+            border-top: 1px solid #e0e0e0;
+        }
+        .footer a {
+            color: #667eea;
+            text-decoration: none;
+        }
+        .divider {
+            height: 1px;
+            background-color: #e0e0e0;
+            margin: 30px 0;
+        }
+        @media only screen and (max-width: 600px) {
+            .content {
+                padding: 30px 20px;
+            }
+            .header h1 {
+                font-size: 24px;
+            }
+            .event-details {
+                padding: 15px;
+            }
+            .detail-row strong {
+                width: auto;
+                display: block;
+                margin-bottom: 5px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <!-- Header -->
+        <div class="header">
+            <h1>🎉 You're Invited!</h1>
+        </div>
+
+        <!-- Content -->
+        <div class="content">
+            <div class="greeting">
+                Hello {{ guest.name }},
+            </div>
+
+            <p class="message">
+                We're excited to invite you to an upcoming event! Your presence would make it even more special.
+            </p>
+
+            <!-- Event Details -->
+            <div class="event-details">
+                <h2>{{ event.title }}</h2>
+                {% if event.description %}
+                <p style="color: #666; margin: 10px 0;">{{ event.description }}</p>
+                {% endif %}
+                <div class="detail-row">
+                    <strong>📅 Date:</strong> {{ event.date|date:"F d, Y" }}
+                </div>
+                <div class="detail-row">
+                    <strong>🕐 Time:</strong> {{ event.date|date:"g:i A" }}
+                </div>
+                {% if event.location %}
+                <div class="detail-row">
+                    <strong>📍 Location:</strong> {{ event.location }}
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- QR Code Section -->
+            <div class="qr-section">
+                <h3>Your Personal QR Code</h3>
+                <p>
+                    Please save this QR code or access it through the link below. You'll need it for event check-in.
+                </p>
+                <a href="{{ qr_code_url }}" class="qr-button">View My QR Code</a>
+            </div>
+
+            <div class="divider"></div>
+
+            <p class="message">
+                We look forward to seeing you there! If you have any questions, please don't hesitate to reach out.
+            </p>
+
+            <p class="message" style="margin-top: 30px; color: #888; font-size: 14px;">
+                <strong>Note:</strong> Please bring your QR code (digital or printed) to the event for quick check-in.
+            </p>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <p style="margin: 0 0 10px 0;">
+                This invitation was sent from our event management system.
+            </p>
+            <p style="margin: 0;">
+                <a href="{{ frontend_url }}">Visit our website</a>
+            </p>
+        </div>
+    </div>
+</body>
+</html>

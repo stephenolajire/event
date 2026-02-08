@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Event Reminder</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f4f4f4;
+            line-height: 1.6;
+        }
+        .email-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+        }
+        .header {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            padding: 40px 20px;
+            text-align: center;
+            color: #ffffff;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: 600;
+        }
+        .reminder-badge {
+            display: inline-block;
+            background-color: rgba(255, 255, 255, 0.2);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            margin-top: 10px;
+            font-weight: 500;
+        }
+        .content {
+            padding: 40px 30px;
+        }
+        .greeting {
+            font-size: 18px;
+            color: #333333;
+            margin-bottom: 20px;
+        }
+        .countdown-section {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: #ffffff;
+            padding: 30px;
+            text-align: center;
+            border-radius: 8px;
+            margin: 30px 0;
+        }
+        .countdown-section h2 {
+            margin: 0 0 10px 0;
+            font-size: 22px;
+            font-weight: 600;
+        }
+        .countdown-section .time {
+            font-size: 36px;
+            font-weight: 700;
+            margin: 10px 0;
+        }
+        .event-details {
+            background-color: #f8f9fa;
+            border-left: 4px solid #f5576c;
+            padding: 20px;
+            margin: 30px 0;
+            border-radius: 4px;
+        }
+        .event-details h3 {
+            margin: 0 0 15px 0;
+            color: #333333;
+            font-size: 20px;
+        }
+        .detail-row {
+            margin: 10px 0;
+            color: #555555;
+            font-size: 15px;
+        }
+        .detail-row strong {
+            color: #333333;
+            display: inline-block;
+            width: 100px;
+        }
+        .checklist {
+            background-color: #fff8f0;
+            border: 2px solid #ffd699;
+            border-radius: 8px;
+            padding: 25px;
+            margin: 30px 0;
+        }
+        .checklist h3 {
+            margin: 0 0 15px 0;
+            color: #333333;
+            font-size: 18px;
+        }
+        .checklist-item {
+            padding: 10px 0;
+            color: #555555;
+            font-size: 15px;
+            border-bottom: 1px solid #ffe6cc;
+        }
+        .checklist-item:last-child {
+            border-bottom: none;
+        }
+        .checklist-item::before {
+            content: "✓";
+            display: inline-block;
+            width: 25px;
+            height: 25px;
+            background-color: #f5576c;
+            color: white;
+            text-align: center;
+            border-radius: 50%;
+            margin-right: 10px;
+            line-height: 25px;
+            font-weight: bold;
+        }
+        .action-button {
+            display: inline-block;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: #ffffff;
+            text-decoration: none;
+            padding: 14px 32px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 16px;
+            margin: 20px 0;
+            transition: transform 0.2s;
+        }
+        .action-button:hover {
+            transform: translateY(-2px);
+        }
+        .message {
+            color: #555555;
+            font-size: 15px;
+            line-height: 1.8;
+            margin: 20px 0;
+        }
+        .footer {
+            background-color: #f8f9fa;
+            padding: 30px;
+            text-align: center;
+            color: #888888;
+            font-size: 13px;
+            border-top: 1px solid #e0e0e0;
+        }
+        .footer a {
+            color: #f5576c;
+            text-decoration: none;
+        }
+        .important-note {
+            background-color: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+            color: #856404;
+            font-size: 14px;
+        }
+        .divider {
+            height: 1px;
+            background-color: #e0e0e0;
+            margin: 30px 0;
+        }
+        @media only screen and (max-width: 600px) {
+            .content {
+                padding: 30px 20px;
+            }
+            .header h1 {
+                font-size: 24px;
+            }
+            .countdown-section .time {
+                font-size: 28px;
+            }
+            .event-details {
+                padding: 15px;
+            }
+            .detail-row strong {
+                width: auto;
+                display: block;
+                margin-bottom: 5px;
+            }
+            .checklist {
+                padding: 20px 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <!-- Header -->
+        <div class="header">
+            <h1>⏰ Event Reminder</h1>
+            <div class="reminder-badge">
+                Don't forget!
+            </div>
+        </div>
+
+        <!-- Content -->
+        <div class="content">
+            <div class="greeting">
+                Hi {{ guest.name }},
+            </div>
+
+            <p class="message">
+                This is a friendly reminder about the upcoming event you confirmed attendance for. We're looking forward to seeing you soon!
+            </p>
+
+            <!-- Countdown Section -->
+            <div class="countdown-section">
+                <h2>Event Coming Up</h2>
+                <div class="time">{{ event.date|date:"F d, Y" }}</div>
+                <div style="font-size: 18px;">{{ event.date|date:"l" }} at {{ event.date|date:"g:i A" }}</div>
+            </div>
+
+            <!-- Event Details -->
+            <div class="event-details">
+                <h3>{{ event.title }}</h3>
+                {% if event.description %}
+                <p style="color: #666; margin: 10px 0;">{{ event.description }}</p>
+                {% endif %}
+                <div class="detail-row">
+                    <strong>📅 Date:</strong> {{ event.date|date:"F d, Y" }}
+                </div>
+                <div class="detail-row">
+                    <strong>🕐 Time:</strong> {{ event.date|date:"g:i A" }}
+                </div>
+                {% if event.location %}
+                <div class="detail-row">
+                    <strong>📍 Location:</strong> {{ event.location }}
+                </div>
+                {% endif %}
+                <div class="detail-row">
+                    <strong>👤 Status:</strong> <span style="color: #28a745; font-weight: 600;">Confirmed</span>
+                </div>
+            </div>
+
+            <!-- Pre-Event Checklist -->
+            <div class="checklist">
+                <h3>📋 Pre-Event Checklist</h3>
+                <div class="checklist-item">
+                    Have your QR code ready (digital or printed)
+                </div>
+                <div class="checklist-item">
+                    Note the event location and time
+                </div>
+                <div class="checklist-item">
+                    Plan your route and arrival time
+                </div>
+                {% if event.dress_code %}
+                <div class="checklist-item">
+                    Dress code: {{ event.dress_code }}
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Important Note -->
+            <div class="important-note">
+                <strong>⚠️ Important:</strong> Please bring your QR code for quick check-in at the event. You can access it anytime through the link in your invitation email.
+            </div>
+
+            <div style="text-align: center;">
+                <a href="{{ frontend_url }}" class="action-button">View Event Details</a>
+            </div>
+
+            <div class="divider"></div>
+
+            <p class="message">
+                If you have any questions or need to update your attendance status, please contact us as soon as possible.
+            </p>
+
+            <p class="message" style="margin-top: 30px; font-size: 14px; color: #888;">
+                We're excited to have you join us! See you soon!
+            </p>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <p style="margin: 0 0 10px 0;">
+                This reminder was sent from our event management system.
+            </p>
+            <p style="margin: 0;">
+                <a href="{{ frontend_url }}">Visit our website</a>
+            </p>
+            <p style="margin: 15px 0 0 0; font-size: 12px; color: #aaa;">
+                You're receiving this because you confirmed attendance for this event.
+            </p>
+        </div>
+    </div>
+</body>
+</html>
