@@ -58,6 +58,21 @@
             display: inline-block;
             width: 100px;
         }
+        .organizer-info {
+            background-color: #e8f4f8;
+            border-left: 4px solid #17a2b8;
+            padding: 20px;
+            margin: 30px 0;
+            border-radius: 4px;
+        }
+        .organizer-info h3 {
+            margin: 0 0 15px 0;
+            color: #333333;
+            font-size: 18px;
+        }
+        .organizer-info .detail-row {
+            margin: 8px 0;
+        }
         .qr-section {
             text-align: center;
             margin: 30px 0;
@@ -125,7 +140,7 @@
             .header h1 {
                 font-size: 24px;
             }
-            .event-details {
+            .event-details, .organizer-info {
                 padding: 15px;
             }
             .detail-row strong {
@@ -185,6 +200,27 @@
                 {% endif %}
             </div>
 
+            <!-- Organizer Information -->
+            <div class="organizer-info">
+                <h3>👤 Event Organizer</h3>
+                <div class="detail-row">
+                    <strong>Name:</strong> {{ event.organizer.get_full_name }}
+                </div>
+                {% if event.organizer.email %}
+                <div class="detail-row">
+                    <strong>Email:</strong> <a href="mailto:{{ event.organizer.email }}" style="color: #667eea; text-decoration: none;">{{ event.organizer.email }}</a>
+                </div>
+                {% endif %}
+                {% if event.organizer.phone %}
+                <div class="detail-row">
+                    <strong>Phone:</strong> <a href="tel:{{ event.organizer.phone }}" style="color: #667eea; text-decoration: none;">{{ event.organizer.phone }}</a>
+                </div>
+                {% endif %}
+                <p style="margin: 10px 0 0 0; font-size: 14px; color: #666;">
+                    Feel free to reach out if you have any questions about the event.
+                </p>
+            </div>
+
             <!-- QR Code Section -->
             <div class="qr-section">
                 <h3>📱 Your Check-In QR Code</h3>
@@ -196,13 +232,6 @@
                 <img src="data:image/png;base64,{{ qr_image_base64 }}" 
                      alt="Your QR Code" 
                      class="qr-code-image">
-                
-                <p style="font-size: 12px; color: #888; margin-top: 15px;">
-                    You can also access your QR code anytime at:<br>
-                    <a href="{{ validation_url }}" style="color: #667eea; text-decoration: none;">
-                        {{ validation_url }}
-                    </a>
-                </p>
             </div>
 
             <div class="divider"></div>
@@ -215,14 +244,14 @@
             </div>
 
             <p class="message">
-                We look forward to seeing you there! If you have any questions, please don't hesitate to reach out.
+                We look forward to seeing you there! If you have any questions, please don't hesitate to reach out to the organizer.
             </p>
         </div>
 
         <!-- Footer -->
         <div class="footer">
             <p style="margin: 0 0 10px 0;">
-                This invitation was sent from our event management system.
+                This invitation was sent by {{ event.organizer.get_full_name }} via our event management system.
             </p>
             <p style="margin: 0;">
                 <a href="{{ frontend_url }}">Visit our website</a>

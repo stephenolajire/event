@@ -4,6 +4,7 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
+from datetime import date
 
 from .models import CheckIn
 from .serializers import CheckInSerializer
@@ -70,6 +71,19 @@ class CheckInViewSet(viewsets.ModelViewSet):
             )
         
         guest = qr_code.guest
+        event = guest.event
+        
+        # Check if today is the event date
+        today = timezone.now().date()
+        event_date = event.event_date.date() if hasattr(event.event_date, 'date') else event.event_date
+        
+        if today != event_date:
+            return Response({
+                'valid': False,
+                'error': 'Check-in is only allowed on the event date',
+                'event_date': event_date,
+                'current_date': today
+            }, status=status.HTTP_400_BAD_REQUEST)
         
         return Response({
             'valid': True,
@@ -85,11 +99,11 @@ class CheckInViewSet(viewsets.ModelViewSet):
                 'checked_in_at': guest.checked_in_at,
             },
             'event': {
-                'id': guest.event.id,
-                'title': guest.event.title,
-                'event_date': guest.event.event_date,
-                'location': guest.event.location,
-                'venue_name': guest.event.venue_name,
+                'id': event.id,
+                'title': event.title,
+                'event_date': event.event_date,
+                'location': event.location,
+                'venue_name': event.venue_name,
             },
             'qr_code': {
                 'is_used': qr_code.is_used,
@@ -127,6 +141,19 @@ class CheckInViewSet(viewsets.ModelViewSet):
             )
         
         guest = qr_code.guest
+        event = guest.event
+        
+        # Check if today is the event date
+        today = timezone.now().date()
+        event_date = event.event_date.date() if hasattr(event.event_date, 'date') else event.event_date
+        
+        if today != event_date:
+            return Response({
+                'error': 'Check-in is only allowed on the event date',
+                'event_date': event_date,
+                'current_date': today,
+                'event_title': event.title
+            }, status=status.HTTP_400_BAD_REQUEST)
         
         # Check if already checked in
         if guest.has_checked_in:

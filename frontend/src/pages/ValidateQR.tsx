@@ -10,6 +10,7 @@ import {
   Calendar,
   Loader2,
   AlertCircle,
+  Clock,
 } from "lucide-react";
 import api from "../constant/api";
 import { toast } from "react-toastify";
@@ -42,6 +43,8 @@ interface QRCodeData {
 interface ValidationResponse {
   valid: boolean;
   error?: string;
+  event_date?: string;
+  current_date?: string;
   guest?: GuestData;
   event?: EventData;
   qr_code?: QRCodeData;
@@ -56,6 +59,11 @@ const ValidateQR = () => {
   const [validationData, setValidationData] =
     useState<ValidationResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [dateError, setDateError] = useState<{
+    message: string;
+    eventDate: string;
+    currentDate: string;
+  } | null>(null);
 
   useEffect(() => {
     if (token) {
@@ -66,6 +74,7 @@ const ValidateQR = () => {
   const validateQRCode = async () => {
     setIsValidating(true);
     setError(null);
+    setDateError(null);
 
     try {
       const response = await api.post("/checkin/validate_qr/", { token });
@@ -76,7 +85,21 @@ const ValidateQR = () => {
         err?.response?.data?.error ||
         err?.response?.data?.message ||
         "Failed to validate QR code";
-      setError(errorMessage);
+
+      // Check if it's a date mismatch error
+      if (
+        err?.response?.data?.event_date &&
+        err?.response?.data?.current_date
+      ) {
+        setDateError({
+          message: errorMessage,
+          eventDate: err.response.data.event_date,
+          currentDate: err.response.data.current_date,
+        });
+      } else {
+        setError(errorMessage);
+      }
+
       setIsValidating(false);
     }
   };
@@ -103,14 +126,40 @@ const ValidateQR = () => {
         err?.response?.data?.message ||
         "Failed to check in guest";
 
-      toast.error(errorMessage, {
-        position: "top-right",
-        autoClose: 5000,
-        theme: "dark",
-      });
+      // Check if it's a date mismatch error
+      if (
+        err?.response?.data?.event_date &&
+        err?.response?.data?.current_date
+      ) {
+        toast.error(
+          `Check-in is only allowed on the event date (${new Date(
+            err.response.data.event_date,
+          ).toLocaleDateString()})`,
+          {
+            position: "top-right",
+            autoClose: 5000,
+            theme: "dark",
+          },
+        );
+      } else {
+        toast.error(errorMessage, {
+          position: "top-right",
+          autoClose: 5000,
+          theme: "dark",
+        });
+      }
     } finally {
       setIsCheckingIn(false);
     }
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString("en-US", {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
   };
 
   if (isValidating) {
@@ -127,6 +176,42 @@ const ValidateQR = () => {
     );
   }
 
+  // Handle date mismatch error
+  if (dateError) {
+    return (
+      <div className="min-h-screen bg-dark flex items-center justify-center p-4">
+        <div className="max-w-md w-full bg-dark-light border border-yellow-900 rounded-xl p-8 text-center">
+          <Clock size={64} className="text-yellow-500 mx-auto mb-4" />
+          <h1 className="text-2xl font-bold text-light mb-2">Not Event Day</h1>
+          <p className="text-yellow-400 mb-6">{dateError.message}</p>
+
+          <div className="bg-dark border border-yellow-800 rounded-lg p-4 mb-6 space-y-3">
+            <div>
+              <p className="text-xs text-primary-400 mb-1">Current Date</p>
+              <p className="text-light font-semibold">
+                {formatDate(dateError.currentDate)}
+              </p>
+            </div>
+            <div className="border-t border-primary-800 pt-3">
+              <p className="text-xs text-primary-400 mb-1">Event Date</p>
+              <p className="text-yellow-400 font-semibold">
+                {formatDate(dateError.eventDate)}
+              </p>
+            </div>
+          </div>
+
+          <button
+            onClick={() => navigate("/dashboard")}
+            className="w-full px-6 py-3 bg-primary-600 hover:bg-primary-700 text-light rounded-lg font-semibold transition-all"
+          >
+            Go to Dashboard
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Handle other errors
   if (error || !validationData?.valid) {
     return (
       <div className="min-h-screen bg-dark flex items-center justify-center p-4">
