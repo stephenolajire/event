@@ -28,14 +28,45 @@ export interface ValidateQRCodePayload {
 
 export interface ValidateQRCodeResponse {
   valid: boolean;
-  message: string;
+  error?: string;
   guest?: {
     id: number;
     full_name: string;
+    first_name: string;
+    last_name: string;
     email: string;
-    event_title: string;
+    phone_number?: string;
+    company?: string;
+    has_checked_in: boolean;
+    checked_in_at?: string;
   };
-  qr_code?: QRCode;
+  event?: {
+    id: number;
+    title: string;
+    event_date: string;
+    location: string;
+    venue_name: string;
+  };
+  qr_code?: {
+    is_used: boolean;
+    used_at?: string;
+  };
+}
+
+export interface CheckInPayload {
+  token: string;
+}
+
+export interface CheckInResponse {
+  success: boolean;
+  message: string;
+  guest: {
+    id: number;
+    full_name: string;
+    email: string;
+    checked_in_at: string;
+  };
+  checkin: any;
 }
 
 export interface QRCodeListParams {
@@ -72,11 +103,17 @@ const qrCodeService = {
     return response.data;
   },
 
-  // Validate QR code token
+  // Validate QR code token (without checking in)
   validateQRCode: async (
     payload: ValidateQRCodePayload,
   ): Promise<ValidateQRCodeResponse> => {
-    const response = await api.post("/qr-codes/validate/", payload);
+    const response = await api.post("/checkin/validate_qr/", payload);
+    return response.data;
+  },
+
+  // Check in guest using QR code token
+  checkInGuest: async (payload: CheckInPayload): Promise<CheckInResponse> => {
+    const response = await api.post("/checkin/checkin/", payload);
     return response.data;
   },
 

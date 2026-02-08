@@ -1,11 +1,12 @@
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from django.shortcuts import get_object_or_404
+from django.utils import timezone
 
 from .models import CheckIn
-from .serializers import CheckInSerializer, QRScanSerializer
+from .serializers import CheckInSerializer
 from guests.models import Guest
 from qr_codes.models import QRCode
 
@@ -39,14 +40,73 @@ class CheckInViewSet(viewsets.ModelViewSet):
         
         return queryset
     
-    @action(detail=False, methods=['post'])
-    def scan(self, request):
-        """Process QR code scan and check in guest."""
-        serializer = QRScanSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
+    @action(detail=False, methods=['post'], permission_classes=[AllowAny])
+    def validate_qr(self, request):
+        """Validate QR code and return guest details without checking in."""
+        token = request.data.get('token')
         
-        token = serializer.validated_data['token']
-        notes = serializer.validated_data.get('notes', '')
+        if not token:
+            return Response(
+                {'error': 'Token is required'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Verify token
+        payload = QRCode.verify_token(token)
+        
+        if 'error' in payload:
+            return Response(
+                {'valid': False, 'error': payload['error']},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Get QR code
+        try:
+            qr_code = QRCode.objects.select_related('guest', 'guest__event').get(token=token)
+        except QRCode.DoesNotExist:
+            return Response(
+                {'valid': False, 'error': 'Invalid QR code'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        
+        guest = qr_code.guest
+        
+        return Response({
+            'valid': True,
+            'guest': {
+                'id': guest.id,
+                'full_name': guest.full_name,
+                'first_name': guest.first_name,
+                'last_name': guest.last_name,
+                'email': guest.email,
+                'phone_number': guest.phone_number,
+                'company': guest.company,
+                'has_checked_in': guest.has_checked_in,
+                'checked_in_at': guest.checked_in_at,
+            },
+            'event': {
+                'id': guest.event.id,
+                'title': guest.event.title,
+                'event_date': guest.event.event_date,
+                'location': guest.event.location,
+                'venue_name': guest.event.venue_name,
+            },
+            'qr_code': {
+                'is_used': qr_code.is_used,
+                'used_at': qr_code.used_at,
+            }
+        }, status=status.HTTP_200_OK)
+    
+    @action(detail=False, methods=['post'], permission_classes=[AllowAny])
+    def checkin(self, request):
+        """Simple check-in endpoint - just check in the guest."""
+        token = request.data.get('token')
+        
+        if not token:
+            return Response(
+                {'error': 'Token is required'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
         
         # Verify token
         payload = QRCode.verify_token(token)
@@ -59,88 +119,53 @@ class CheckInViewSet(viewsets.ModelViewSet):
         
         # Get QR code
         try:
-            qr_code = QRCode.objects.get(token=token)
+            qr_code = QRCode.objects.select_related('guest', 'guest__event').get(token=token)
         except QRCode.DoesNotExist:
             return Response(
                 {'error': 'Invalid QR code'},
                 status=status.HTTP_404_NOT_FOUND
             )
         
-        # Check if already used
-        if qr_code.is_used:
-            return Response(
-                {
-                    'error': 'This QR code has already been used',
-                    'checked_in_at': qr_code.used_at,
-                    'guest': qr_code.guest.full_name
-                },
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        
-        # Check in guest
         guest = qr_code.guest
-        guest.mark_as_checked_in(checked_in_by=request.user.get_full_name())
-        
-        # Mark QR code as used
-        qr_code.mark_as_used()
-        
-        # Create check-in record
-        checkin = CheckIn.objects.create(
-            guest=guest,
-            checked_in_by=request.user,
-            check_in_method='qr_scan',
-            notes=notes,
-            ip_address=get_client_ip(request)
-        )
-        
-        return Response({
-            'success': True,
-            'message': f'{guest.full_name} checked in successfully',
-            'checkin': CheckInSerializer(checkin).data
-        }, status=status.HTTP_200_OK)
-    
-    @action(detail=False, methods=['post'])
-    def manual(self, request):
-        """Manually check in a guest."""
-        guest_id = request.data.get('guest_id')
-        notes = request.data.get('notes', '')
-        
-        if not guest_id:
-            return Response(
-                {'error': 'guest_id is required'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        
-        guest = get_object_or_404(
-            Guest,
-            id=guest_id,
-            event__organizer=request.user
-        )
         
         # Check if already checked in
         if guest.has_checked_in:
             return Response(
                 {
                     'error': 'Guest has already checked in',
-                    'checked_in_at': guest.checked_in_at
+                    'checked_in_at': guest.checked_in_at,
+                    'guest': guest.full_name
                 },
                 status=status.HTTP_400_BAD_REQUEST
             )
         
-        # Check in guest
-        guest.mark_as_checked_in(checked_in_by=request.user.get_full_name())
+        # Mark guest as checked in
+        guest.has_checked_in = True
+        guest.checked_in_at = timezone.now()
+        guest.checked_in_by = 'Security'  # Default to Security
+        guest.save()
+        
+        # Mark QR code as used
+        qr_code.is_used = True
+        qr_code.used_at = timezone.now()
+        qr_code.save()
         
         # Create check-in record
         checkin = CheckIn.objects.create(
             guest=guest,
-            checked_in_by=request.user,
-            check_in_method='manual',
-            notes=notes,
+            checked_in_by=request.user if request.user.is_authenticated else None,
+            check_in_method='qr_scan',
             ip_address=get_client_ip(request)
         )
         
         return Response({
             'success': True,
-            'message': f'{guest.full_name} checked in successfully',
+            'message': f'{guest.full_name} checked in successfully!',
+            'guest': {
+                'id': guest.id,
+                'full_name': guest.full_name,
+                'email': guest.email,
+                'checked_in_at': guest.checked_in_at,
+            },
             'checkin': CheckInSerializer(checkin).data
         }, status=status.HTTP_200_OK)

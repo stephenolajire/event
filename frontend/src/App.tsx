@@ -22,6 +22,7 @@ import Settings from "./admin/Settings";
 import Profile from "./admin/Profile";
 import CreateEvent from "./admin/CreateEvent";
 import AddGuest from "./admin/AddGuest";
+import ValidateQR from "./pages/ValidateQR";
 
 // Create a client
 const queryClient = new QueryClient({
@@ -73,6 +74,7 @@ function App() {
             </Route>
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
+            <Route path="/validate-qr/:token" element={<ValidateQR />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
 

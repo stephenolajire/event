@@ -75,26 +75,31 @@
             margin-bottom: 20px;
             font-size: 14px;
         }
-        .qr-button {
-            display: inline-block;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: #ffffff;
-            text-decoration: none;
-            padding: 14px 32px;
-            border-radius: 6px;
-            font-weight: 600;
-            font-size: 16px;
-            margin-top: 10px;
-            transition: transform 0.2s;
-        }
-        .qr-button:hover {
-            transform: translateY(-2px);
+        .qr-code-image {
+            max-width: 250px;
+            height: auto;
+            margin: 20px auto;
+            display: block;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 10px;
+            background: white;
         }
         .message {
             color: #555555;
             font-size: 15px;
             line-height: 1.8;
             margin: 20px 0;
+        }
+        .important-note {
+            background-color: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        .important-note strong {
+            color: #856404;
         }
         .footer {
             background-color: #f8f9fa;
@@ -128,6 +133,9 @@
                 display: block;
                 margin-bottom: 5px;
             }
+            .qr-code-image {
+                max-width: 200px;
+            }
         }
     </style>
 </head>
@@ -141,11 +149,11 @@
         <!-- Content -->
         <div class="content">
             <div class="greeting">
-                Hello {{ guest.name }},
+                Hello {{ guest.first_name }},
             </div>
 
             <p class="message">
-                We're excited to invite you to an upcoming event! Your presence would make it even more special.
+                We're excited to invite you to our upcoming event! Your presence would make it even more special.
             </p>
 
             <!-- Event Details -->
@@ -155,35 +163,59 @@
                 <p style="color: #666; margin: 10px 0;">{{ event.description }}</p>
                 {% endif %}
                 <div class="detail-row">
-                    <strong>📅 Date:</strong> {{ event.date|date:"F d, Y" }}
+                    <strong>📅 Date:</strong> {{ event.event_date|date:"F d, Y" }}
                 </div>
                 <div class="detail-row">
-                    <strong>🕐 Time:</strong> {{ event.date|date:"g:i A" }}
+                    <strong>🕐 Time:</strong> {{ event.event_date|date:"g:i A" }}
                 </div>
+                {% if event.venue_name %}
+                <div class="detail-row">
+                    <strong>🏢 Venue:</strong> {{ event.venue_name }}
+                </div>
+                {% endif %}
                 {% if event.location %}
                 <div class="detail-row">
                     <strong>📍 Location:</strong> {{ event.location }}
+                </div>
+                {% endif %}
+                {% if event.address %}
+                <div class="detail-row">
+                    <strong>🗺️ Address:</strong> {{ event.address }}
                 </div>
                 {% endif %}
             </div>
 
             <!-- QR Code Section -->
             <div class="qr-section">
-                <h3>Your Personal QR Code</h3>
+                <h3>📱 Your Check-In QR Code</h3>
                 <p>
-                    Please save this QR code or access it through the link below. You'll need it for event check-in.
+                    Present this QR code at the event entrance for quick check-in.
                 </p>
-                <a href="{{ qr_code_url }}" class="qr-button">View My QR Code</a>
+                
+                <!-- Embedded QR Code Image -->
+                <img src="data:image/png;base64,{{ qr_image_base64 }}" 
+                     alt="Your QR Code" 
+                     class="qr-code-image">
+                
+                <p style="font-size: 12px; color: #888; margin-top: 15px;">
+                    You can also access your QR code anytime at:<br>
+                    <a href="{{ validation_url }}" style="color: #667eea; text-decoration: none;">
+                        {{ validation_url }}
+                    </a>
+                </p>
             </div>
 
             <div class="divider"></div>
 
+            <div class="important-note">
+                <p style="margin: 0; color: #856404;">
+                    <strong>⚠️ Important:</strong> Please bring this email (digital or printed) or save the QR code to your device. 
+                    You will need to show it at the event entrance for check-in.
+                </p>
+            </div>
+
             <p class="message">
                 We look forward to seeing you there! If you have any questions, please don't hesitate to reach out.
-            </p>
-
-            <p class="message" style="margin-top: 30px; color: #888; font-size: 14px;">
-                <strong>Note:</strong> Please bring your QR code (digital or printed) to the event for quick check-in.
             </p>
         </div>
 
