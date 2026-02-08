@@ -16,7 +16,7 @@ SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-change-this-in-produc
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get('DEBUG', 'True') == 'True'
 
-ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
+ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1,event-h4rw.onrender.com').split(',')
 
 # Application definition
 INSTALLED_APPS = [
@@ -123,7 +123,7 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
-STATICFILES_DIRS = [BASE_DIR / 'static']
+# Removed STATICFILES_DIRS to avoid the warning - create 'static' folder if you need it
 
 # Media files
 MEDIA_URL = 'media/'
@@ -169,9 +169,9 @@ SIMPLE_JWT = {
     'AUTH_TOKEN_CLASSES': ('rest_framework_simplejwt.tokens.AccessToken',),
 }
 
-# CORS Settings
+# CORS Settings - FIXED: Comma moved outside the string
 CORS_ALLOWED_ORIGINS = [
-    'http://localhost:5173,'
+    'http://localhost:5173',
     'http://localhost:8080',
     'https://event-h4rw.onrender.com'
 ]
@@ -192,9 +192,11 @@ CORS_ALLOW_HEADERS = [
     'x-requested-with',
 ]
 
+# CSRF Settings - FIXED: Added production URL
 CSRF_TRUSTED_ORIGINS = [
     'http://localhost:5173',
     'http://localhost:8080',
+    'https://event-h4rw.onrender.com',
 ]
 
 # Email Settings
@@ -249,5 +251,3 @@ if not DEBUG:
     SECURE_HSTS_SECONDS = 31536000
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
     SECURE_HSTS_PRELOAD = True
-
-ALLOWED_HOSTS = ['*']
