@@ -12,6 +12,7 @@ import {
   Bell,
   X,
 } from "lucide-react";
+import logo from "../../public/event.jpeg"
 
 interface SidebarProps {
   collapsed: boolean;
@@ -101,7 +102,7 @@ const Sidebar = ({
       <div className="h-20 flex items-center justify-between px-4 sm:px-6 border-b border-primary-900">
         {!collapsed && (
           <Link to="/dashboard" className="flex items-center gap-3">
-            <img src="./event.jpg" className="w-25 h-25 rounded-full" />
+            <img src={logo} className="w-10 h-10 rounded-full" />
           </Link>
         )}
 

@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Menu, X } from "lucide-react";
 import { Link } from "react-router-dom";
+import logo from "../../public/event.jpeg"
 
 const Navigation = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -49,7 +50,7 @@ const Navigation = () => {
               onClick={(e) => scrollToSection(e, "#home")}
               className="font-heading text-2xl font-bold text-light hover:text-primary-400 transition-colors"
             >
-              <img  src="./event.jpg" className="w-25 h-25 rounded-full"/>
+              <img  src={logo} className="w-15 h-15 rounded-full"/>
             </Link>
           </div>
 
