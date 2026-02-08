@@ -3,7 +3,6 @@ import {
   LayoutDashboard,
   Calendar,
   Users,
-  QrCode,
   ScanLine,
   BarChart3,
   Settings,
@@ -102,15 +101,7 @@ const Sidebar = ({
       <div className="h-20 flex items-center justify-between px-4 sm:px-6 border-b border-primary-900">
         {!collapsed && (
           <Link to="/dashboard" className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-linear-to-br from-primary-600 to-primary-800 rounded-lg flex items-center justify-center">
-              <QrCode size={24} className="text-light" />
-            </div>
-            <div>
-              <h1 className="font-heading text-lg font-bold text-light">
-                EventInvite
-              </h1>
-              <p className="text-xs text-primary-400">Admin Panel</p>
-            </div>
+            <img src="./event.jpg" className="w-25 h-25 rounded-full" />
           </Link>
         )}
 

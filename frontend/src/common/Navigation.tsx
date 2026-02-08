@@ -44,13 +44,13 @@ const Navigation = () => {
         <div className="flex items-center justify-between h-20">
           {/* Logo */}
           <div className="shrink-0">
-            <a
-              href="#home"
+            <Link
+              to='/'
               onClick={(e) => scrollToSection(e, "#home")}
               className="font-heading text-2xl font-bold text-light hover:text-primary-400 transition-colors"
             >
-              EventInvite
-            </a>
+              <img  src="./event.jpg" className="w-25 h-25 rounded-full"/>
+            </Link>
           </div>
 
           {/* Desktop Navigation */}
