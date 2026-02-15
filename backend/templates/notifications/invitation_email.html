@@ -4,258 +4,545 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Event Invitation</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        body {
+        * {
             margin: 0;
             padding: 0;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            background-color: #f4f4f4;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+            background-color: #e5e5e5;
+            padding: 40px 20px;
             line-height: 1.6;
         }
-        .email-container {
-            max-width: 600px;
+        
+        .invitation-wrapper {
+            max-width: 650px;
             margin: 0 auto;
-            background-color: #ffffff;
+            perspective: 1000px;
         }
-        .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            padding: 40px 20px;
+        
+        .invitation-card {
+            background: linear-gradient(135deg, #ffffff 0%, #f5f5f5 100%);
+            border-radius: 16px;
+            box-shadow: 
+                0 20px 60px rgba(0, 0, 0, 0.15),
+                0 8px 16px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            position: relative;
+        }
+        
+        /* Decorative corner elements */
+        .invitation-card::before,
+        .invitation-card::after {
+            content: '';
+            position: absolute;
+            width: 120px;
+            height: 120px;
+            border: 2px solid #e5e5e5;
+            z-index: 1;
+        }
+        
+        .invitation-card::before {
+            top: 20px;
+            left: 20px;
+            border-right: none;
+            border-bottom: none;
+        }
+        
+        .invitation-card::after {
+            bottom: 20px;
+            right: 20px;
+            border-left: none;
+            border-top: none;
+        }
+        
+        /* Header with elegant design */
+        .card-header {
+            background: linear-gradient(135deg, #1a1a1a 0%, #333333 100%);
+            padding: 60px 40px;
             text-align: center;
-            color: #ffffff;
+            position: relative;
+            overflow: hidden;
         }
-        .header h1 {
-            margin: 0;
+        
+        .card-header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            animation: shimmer 3s infinite;
+        }
+        
+        @keyframes shimmer {
+            0%, 100% { transform: translate(0, 0); }
+            50% { transform: translate(10%, 10%); }
+        }
+        
+        .invitation-title {
+            font-family: 'Poppins', sans-serif;
+            font-size: 16px;
+            font-weight: 500;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            color: #cccccc;
+            margin-bottom: 15px;
+            position: relative;
+            z-index: 2;
+        }
+        
+        .event-name {
+            font-family: 'Poppins', sans-serif;
+            font-size: 36px;
+            font-weight: 700;
+            color: #ffffff;
+            margin-bottom: 10px;
+            position: relative;
+            z-index: 2;
+            line-height: 1.2;
+        }
+        
+        .honored-guest {
+            font-family: 'Poppins', sans-serif;
+            font-size: 14px;
+            font-weight: 400;
+            color: #b3b3b3;
+            margin-top: 25px;
+            position: relative;
+            z-index: 2;
+        }
+        
+        .guest-name {
+            display: block;
+            font-size: 24px;
+            font-weight: 600;
+            color: #ffffff;
+            margin-top: 8px;
+            font-style: italic;
+        }
+        
+        /* Content Section */
+        .card-content {
+            padding: 50px 40px;
+            position: relative;
+            z-index: 2;
+        }
+        
+        .description {
+            text-align: center;
+            font-size: 16px;
+            color: #4d4d4d;
+            margin-bottom: 40px;
+            max-width: 500px;
+            margin-left: auto;
+            margin-right: auto;
+            line-height: 1.8;
+        }
+        
+        /* Event Details Grid */
+        .details-section {
+            background: #ffffff;
+            border: 2px solid #e5e5e5;
+            border-radius: 12px;
+            padding: 35px;
+            margin: 40px 0;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+        
+        .section-title {
+            font-family: 'Poppins', sans-serif;
+            font-size: 18px;
+            font-weight: 600;
+            color: #1a1a1a;
+            margin-bottom: 25px;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        
+        .details-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 25px;
+        }
+        
+        .detail-item {
+            text-align: center;
+            padding: 20px;
+            background: #f5f5f5;
+            border-radius: 8px;
+            border: 1px solid #e5e5e5;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .detail-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .detail-icon {
             font-size: 28px;
+            margin-bottom: 10px;
+            display: block;
+        }
+        
+        .detail-label {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #808080;
+            margin-bottom: 8px;
             font-weight: 600;
         }
-        .content {
-            padding: 40px 30px;
-        }
-        .greeting {
-            font-size: 18px;
-            color: #333333;
-            margin-bottom: 20px;
-        }
-        .event-details {
-            background-color: #f8f9fa;
-            border-left: 4px solid #667eea;
-            padding: 20px;
-            margin: 30px 0;
-            border-radius: 4px;
-        }
-        .event-details h2 {
-            margin: 0 0 15px 0;
-            color: #333333;
-            font-size: 24px;
-        }
-        .detail-row {
-            margin: 10px 0;
-            color: #555555;
+        
+        .detail-value {
             font-size: 15px;
+            color: #1a1a1a;
+            font-weight: 500;
+            line-height: 1.4;
         }
-        .detail-row strong {
-            color: #333333;
-            display: inline-block;
-            width: 100px;
-        }
-        .organizer-info {
-            background-color: #e8f4f8;
-            border-left: 4px solid #17a2b8;
-            padding: 20px;
+        
+        /* Organizer Section */
+        .organizer-section {
+            background: linear-gradient(135deg, #f5f5f5 0%, #e5e5e5 100%);
+            border-radius: 12px;
+            padding: 30px;
             margin: 30px 0;
-            border-radius: 4px;
+            border-left: 4px solid #333333;
         }
-        .organizer-info h3 {
-            margin: 0 0 15px 0;
+        
+        .organizer-section h3 {
+            font-family: 'Poppins', sans-serif;
+            font-size: 16px;
+            font-weight: 600;
+            color: #1a1a1a;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+        }
+        
+        .organizer-details {
+            display: grid;
+            gap: 12px;
+        }
+        
+        .organizer-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 14px;
+            color: #4d4d4d;
+        }
+        
+        .organizer-row strong {
+            color: #1a1a1a;
+            min-width: 80px;
+            font-weight: 600;
+        }
+        
+        .organizer-row a {
             color: #333333;
-            font-size: 18px;
+            text-decoration: none;
+            border-bottom: 1px solid #cccccc;
+            transition: border-color 0.3s;
         }
-        .organizer-info .detail-row {
-            margin: 8px 0;
+        
+        .organizer-row a:hover {
+            border-color: #333333;
         }
+        
+        .organizer-note {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #cccccc;
+            font-size: 13px;
+            color: #666666;
+            font-style: italic;
+        }
+        
+        /* QR Code Section */
         .qr-section {
             text-align: center;
-            margin: 30px 0;
-            padding: 30px;
-            background-color: #f8f9fa;
-            border-radius: 8px;
+            margin: 40px 0;
+            padding: 40px;
+            background: #ffffff;
+            border-radius: 12px;
+            border: 2px dashed #cccccc;
         }
+        
         .qr-section h3 {
-            margin: 0 0 15px 0;
-            color: #333333;
+            font-family: 'Poppins', sans-serif;
             font-size: 18px;
+            font-weight: 600;
+            color: #1a1a1a;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
         }
-        .qr-section p {
+        
+        .qr-description {
             color: #666666;
-            margin-bottom: 20px;
+            margin-bottom: 30px;
             font-size: 14px;
         }
+        
+        .qr-code-container {
+            display: inline-block;
+            padding: 20px;
+            background: #ffffff;
+            border: 3px solid #1a1a1a;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+        }
+        
         .qr-code-image {
-            max-width: 250px;
+            max-width: 220px;
             height: auto;
-            margin: 20px auto;
             display: block;
-            border: 2px solid #e0e0e0;
-            border-radius: 8px;
-            padding: 10px;
-            background: white;
         }
-        .message {
-            color: #555555;
-            font-size: 15px;
-            line-height: 1.8;
-            margin: 20px 0;
-        }
-        .important-note {
-            background-color: #fff3cd;
-            border-left: 4px solid #ffc107;
-            padding: 15px;
-            margin: 20px 0;
-            border-radius: 4px;
-        }
-        .important-note strong {
-            color: #856404;
-        }
-        .footer {
-            background-color: #f8f9fa;
-            padding: 30px;
-            text-align: center;
-            color: #888888;
-            font-size: 13px;
-            border-top: 1px solid #e0e0e0;
-        }
-        .footer a {
-            color: #667eea;
-            text-decoration: none;
-        }
-        .divider {
-            height: 1px;
-            background-color: #e0e0e0;
+        
+        /* Important Notice */
+        .important-notice {
+            background: linear-gradient(135deg, #333333 0%, #1a1a1a 100%);
+            color: #ffffff;
+            padding: 25px 30px;
+            border-radius: 12px;
             margin: 30px 0;
+            border-left: 5px solid #cccccc;
         }
-        @media only screen and (max-width: 600px) {
-            .content {
+        
+        .important-notice strong {
+            display: block;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin-bottom: 10px;
+            color: #cccccc;
+        }
+        
+        .important-notice p {
+            margin: 0;
+            font-size: 14px;
+            line-height: 1.6;
+            color: #e5e5e5;
+        }
+        
+        /* Divider */
+        .elegant-divider {
+            height: 1px;
+            background: linear-gradient(to right, transparent, #cccccc, transparent);
+            margin: 40px 0;
+        }
+        
+        /* Footer */
+        .card-footer {
+            background: #f5f5f5;
+            padding: 35px 40px;
+            text-align: center;
+            border-top: 1px solid #e5e5e5;
+        }
+        
+        .footer-message {
+            font-size: 13px;
+            color: #808080;
+            margin-bottom: 12px;
+            line-height: 1.6;
+        }
+        
+        .footer-link {
+            color: #333333;
+            text-decoration: none;
+            font-weight: 600;
+            border-bottom: 2px solid #cccccc;
+            padding-bottom: 2px;
+            transition: border-color 0.3s;
+        }
+        
+        .footer-link:hover {
+            border-color: #333333;
+        }
+        
+        /* Responsive Design */
+        @media only screen and (max-width: 650px) {
+            body {
+                padding: 20px 10px;
+            }
+            
+            .invitation-card::before,
+            .invitation-card::after {
+                width: 80px;
+                height: 80px;
+            }
+            
+            .card-header {
+                padding: 40px 25px;
+            }
+            
+            .event-name {
+                font-size: 28px;
+            }
+            
+            .guest-name {
+                font-size: 20px;
+            }
+            
+            .card-content {
+                padding: 35px 25px;
+            }
+            
+            .details-section {
+                padding: 25px 20px;
+            }
+            
+            .details-grid {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+            
+            .qr-section {
                 padding: 30px 20px;
             }
-            .header h1 {
-                font-size: 24px;
-            }
-            .event-details, .organizer-info {
-                padding: 15px;
-            }
-            .detail-row strong {
-                width: auto;
-                display: block;
-                margin-bottom: 5px;
-            }
+            
             .qr-code-image {
-                max-width: 200px;
+                max-width: 180px;
             }
         }
     </style>
 </head>
 <body>
-    <div class="email-container">
-        <!-- Header -->
-        <div class="header">
-            <h1>🎉 You're Invited!</h1>
-        </div>
-
-        <!-- Content -->
-        <div class="content">
-            <div class="greeting">
-                Hello {{ guest.first_name }},
+    <div class="invitation-wrapper">
+        <div class="invitation-card">
+            <!-- Elegant Header -->
+            <div class="card-header">
+                <div class="invitation-title">You're Cordially Invited</div>
+                <h1 class="event-name">{{ event.title }}</h1>
+                <div class="honored-guest">
+                    In Honor of
+                    <span class="guest-name">{{ guest.first_name }}</span>
+                </div>
             </div>
 
-            <p class="message">
-                We're excited to invite you to our upcoming event! Your presence would make it even more special.
-            </p>
-
-            <!-- Event Details -->
-            <div class="event-details">
-                <h2>{{ event.title }}</h2>
+            <!-- Card Content -->
+            <div class="card-content">
                 {% if event.description %}
-                <p style="color: #666; margin: 10px 0;">{{ event.description }}</p>
+                <p class="description">{{ event.description }}</p>
                 {% endif %}
-                <div class="detail-row">
-                    <strong>📅 Date:</strong> {{ event.event_date|date:"F d, Y" }}
-                </div>
-                <div class="detail-row">
-                    <strong>🕐 Time:</strong> {{ event.event_date|date:"g:i A" }}
-                </div>
-                {% if event.venue_name %}
-                <div class="detail-row">
-                    <strong>🏢 Venue:</strong> {{ event.venue_name }}
-                </div>
-                {% endif %}
-                {% if event.location %}
-                <div class="detail-row">
-                    <strong>📍 Location:</strong> {{ event.location }}
-                </div>
-                {% endif %}
-                {% if event.address %}
-                <div class="detail-row">
-                    <strong>🗺️ Address:</strong> {{ event.address }}
-                </div>
-                {% endif %}
-            </div>
 
-            <!-- Organizer Information -->
-            <div class="organizer-info">
-                <h3>👤 Event Organizer</h3>
-                <div class="detail-row">
-                    <strong>Name:</strong> {{ event.organizer.get_full_name }}
+                <!-- Event Details -->
+                <div class="details-section">
+                    <h2 class="section-title">Event Details</h2>
+                    <div class="details-grid">
+                        <div class="detail-item">
+                            <span class="detail-icon">📅</span>
+                            <div class="detail-label">Date</div>
+                            <div class="detail-value">{{ event.event_date|date:"F d, Y" }}</div>
+                        </div>
+                        
+                        <div class="detail-item">
+                            <span class="detail-icon">🕐</span>
+                            <div class="detail-label">Time</div>
+                            <div class="detail-value">{{ event.event_date|date:"g:i A" }}</div>
+                        </div>
+                        
+                        {% if event.venue_name %}
+                        <div class="detail-item">
+                            <span class="detail-icon">🏢</span>
+                            <div class="detail-label">Venue</div>
+                            <div class="detail-value">{{ event.venue_name }}</div>
+                        </div>
+                        {% endif %}
+                        
+                        {% if event.location %}
+                        <div class="detail-item">
+                            <span class="detail-icon">📍</span>
+                            <div class="detail-label">Location</div>
+                            <div class="detail-value">{{ event.location }}</div>
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    {% if event.address %}
+                    <div style="margin-top: 25px; text-align: center; padding: 20px; background: #f5f5f5; border-radius: 8px;">
+                        <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #808080; margin-bottom: 8px; font-weight: 600;">Full Address</div>
+                        <div style="font-size: 14px; color: #1a1a1a;">{{ event.address }}</div>
+                    </div>
+                    {% endif %}
                 </div>
-                {% if event.organizer.email %}
-                <div class="detail-row">
-                    <strong>Email:</strong> <a href="mailto:{{ event.organizer.email }}" style="color: #667eea; text-decoration: none;">{{ event.organizer.email }}</a>
+
+                <!-- Organizer Information -->
+                <div class="organizer-section">
+                    <h3>👤 Event Organizer</h3>
+                    <div class="organizer-details">
+                        <div class="organizer-row">
+                            <strong>Name:</strong>
+                            <span>{{ event.organizer.get_full_name }}</span>
+                        </div>
+                        {% if event.organizer.email %}
+                        <div class="organizer-row">
+                            <strong>Email:</strong>
+                            <a href="mailto:{{ event.organizer.email }}">{{ event.organizer.email }}</a>
+                        </div>
+                        {% endif %}
+                        {% if event.organizer.phone %}
+                        <div class="organizer-row">
+                            <strong>Phone:</strong>
+                            <a href="tel:{{ event.organizer.phone }}">{{ event.organizer.phone }}</a>
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div class="organizer-note">
+                        Feel free to reach out if you have any questions about the event.
+                    </div>
                 </div>
-                {% endif %}
-                {% if event.organizer.phone %}
-                <div class="detail-row">
-                    <strong>Phone:</strong> <a href="tel:{{ event.organizer.phone }}" style="color: #667eea; text-decoration: none;">{{ event.organizer.phone }}</a>
+
+                <div class="elegant-divider"></div>
+
+                <!-- QR Code Section -->
+                <div class="qr-section">
+                    <h3>📱 Check-In Code</h3>
+                    <p class="qr-description">
+                        Present this QR code at the event entrance for seamless check-in
+                    </p>
+                    
+                    <div class="qr-code-container">
+                        <img src="data:image/png;base64,{{ qr_image_base64 }}" 
+                             alt="Event Check-In QR Code" 
+                             class="qr-code-image">
+                    </div>
                 </div>
-                {% endif %}
-                <p style="margin: 10px 0 0 0; font-size: 14px; color: #666;">
-                    Feel free to reach out if you have any questions about the event.
+
+                <!-- Important Notice -->
+                <div class="important-notice">
+                    <strong>⚠️ Important Reminder</strong>
+                    <p>
+                        Please save this invitation or bring the QR code (digital or printed) to the event. 
+                        You will need it for check-in at the entrance.
+                    </p>
+                </div>
+
+                <div class="elegant-divider"></div>
+
+                <p class="description" style="margin-bottom: 0;">
+                    We look forward to celebrating with you!
                 </p>
             </div>
 
-            <!-- QR Code Section -->
-            <div class="qr-section">
-                <h3>📱 Your Check-In QR Code</h3>
-                <p>
-                    Present this QR code at the event entrance for quick check-in.
+            <!-- Footer -->
+            <div class="card-footer">
+                <p class="footer-message">
+                    This invitation was sent by {{ event.organizer.get_full_name }}<br>
+                    via our event management system
                 </p>
-                
-                <!-- Embedded QR Code Image -->
-                <img src="data:image/png;base64,{{ qr_image_base64 }}" 
-                     alt="Your QR Code" 
-                     class="qr-code-image">
+                <a href="{{ frontend_url }}" class="footer-link">Visit Our Website</a>
             </div>
-
-            <div class="divider"></div>
-
-            <div class="important-note">
-                <p style="margin: 0; color: #856404;">
-                    <strong>⚠️ Important:</strong> Please bring this email (digital or printed) or save the QR code to your device. 
-                    You will need to show it at the event entrance for check-in.
-                </p>
-            </div>
-
-            <p class="message">
-                We look forward to seeing you there! If you have any questions, please don't hesitate to reach out to the organizer.
-            </p>
-        </div>
-
-        <!-- Footer -->
-        <div class="footer">
-            <p style="margin: 0 0 10px 0;">
-                This invitation was sent by {{ event.organizer.get_full_name }} via our event management system.
-            </p>
-            <p style="margin: 0;">
-                <a href="{{ frontend_url }}">Visit our website</a>
-            </p>
         </div>
     </div>
 </body>
