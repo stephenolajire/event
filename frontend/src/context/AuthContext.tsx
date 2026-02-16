@@ -1,89 +1,57 @@
-import {
-  createContext,
-  useContext,
-  useState,
-  useEffect,
-  type ReactNode,
-} from "react";
-import { jwtDecode } from "jwt-decode";
-
-// Types
-interface DecodedToken {
-  exp: number;
-  iat?: number;
-  [key: string]: any;
-}
+import React, { createContext, useContext, useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 
 interface AuthContextType {
   isAuthenticated: boolean;
+  isLoading: boolean;
   checkAuth: () => void;
+  logout: () => void;
 }
 
-interface AuthProviderProps {
-  children: ReactNode;
-}
-
-// Create Context
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Auth Provider Component
-export const AuthProvider = ({ children }: AuthProviderProps) => {
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const navigate = useNavigate();
 
-  // Check authentication on mount
+  const checkAuth = () => {
+    const token = localStorage.getItem("authToken");
+    setIsAuthenticated(!!token);
+    setIsLoading(false);
+  };
+
+  const logout = () => {
+    localStorage.removeItem("authToken");
+    localStorage.removeItem("refreshToken");
+    setIsAuthenticated(false);
+    navigate("/login");
+  };
+
   useEffect(() => {
     checkAuth();
   }, []);
 
-  const checkAuth = () => {
-    try {
-      const token = localStorage.getItem("authToken");
-
-      if (!token) {
-        setIsAuthenticated(false);
-        return;
-      }
-
-      // Decode the token
-      const decoded = jwtDecode<DecodedToken>(token);
-
-      // Check if token is expired
-      const currentTime = Date.now() / 1000;
-
-      if (decoded.exp < currentTime) {
-        // Token expired
-        localStorage.removeItem("authToken");
-        setIsAuthenticated(false);
-        return;
-      }
-
-      // Token is valid
-      setIsAuthenticated(true);
-    } catch (error) {
-      // Invalid token
-      console.error("Token validation failed:", error);
-      localStorage.removeItem("authToken");
-      setIsAuthenticated(false);
-    }
-  };
-
-  const value: AuthContextType = {
-    isAuthenticated,
-    checkAuth,
-  };
-
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider
+      value={{
+        isAuthenticated,
+        isLoading,
+        checkAuth,
+        logout,
+      }}
+    >
+      {children}
+    </AuthContext.Provider>
+  );
 };
 
-// Custom hook to use auth context
-export const useAuth = (): AuthContextType => {
+export const useAuth = () => {
   const context = useContext(AuthContext);
-
   if (context === undefined) {
     throw new Error("useAuth must be used within an AuthProvider");
   }
-
   return context;
 };
-
-export default AuthContext;

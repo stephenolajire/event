@@ -1,3 +1,4 @@
+# accounts/serializers.py
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
@@ -21,13 +22,18 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         style={'input_type': 'password'},
         label='Confirm Password'
     )
+    user_type = serializers.ChoiceField(
+        choices=User.USER_TYPE_CHOICES,
+        default='customer',
+        help_text='Select customer to purchase tickets or organizer to create events'
+    )
     
     class Meta:
         model = User
         fields = [
             'id', 'email', 'password', 'password2',
             'first_name', 'last_name', 'phone_number',
-            'organization'
+            'organization', 'user_type'
         ]
         extra_kwargs = {
             'first_name': {'required': True},
@@ -40,6 +46,13 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError({
                 "password": "Password fields didn't match."
             })
+        
+        # Validate organization is provided for organizers
+        if attrs.get('user_type') == 'organizer' and not attrs.get('organization'):
+            raise serializers.ValidationError({
+                "organization": "Organization name is required for event organizers."
+            })
+        
         return attrs
     
     def create(self, validated_data):
@@ -54,16 +67,22 @@ class UserSerializer(serializers.ModelSerializer):
     
     total_events = serializers.IntegerField(read_only=True)
     total_guests = serializers.IntegerField(read_only=True)
+    total_tickets_purchased = serializers.IntegerField(read_only=True)
+    total_orders = serializers.IntegerField(read_only=True)
     full_name = serializers.CharField(source='get_full_name', read_only=True)
+    is_customer = serializers.BooleanField(read_only=True)
+    is_organizer = serializers.BooleanField(read_only=True)
     
     class Meta:
         model = User
         fields = [
             'id', 'email', 'first_name', 'last_name', 'full_name',
             'phone_number', 'organization', 'profile_picture',
-            'total_events', 'total_guests', 'created_at', 'updated_at'
+            'user_type', 'is_customer', 'is_organizer',
+            'total_events', 'total_guests', 'total_tickets_purchased', 
+            'total_orders', 'created_at', 'updated_at'
         ]
-        read_only_fields = ['id', 'email', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'email', 'user_type', 'created_at', 'updated_at']
 
 
 class UserUpdateSerializer(serializers.ModelSerializer):
@@ -75,6 +94,15 @@ class UserUpdateSerializer(serializers.ModelSerializer):
             'first_name', 'last_name', 'phone_number',
             'organization', 'profile_picture'
         ]
+    
+    def validate_organization(self, value):
+        """Ensure organizers have organization name."""
+        user = self.instance
+        if user.is_organizer and not value:
+            raise serializers.ValidationError(
+                "Organization name is required for event organizers."
+            )
+        return value
 
 
 class ChangePasswordSerializer(serializers.Serializer):
@@ -117,6 +145,10 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
             'first_name': self.user.first_name,
             'last_name': self.user.last_name,
             'full_name': self.user.get_full_name(),
+            'user_type': self.user.user_type,
+            'is_customer': self.user.is_customer,
+            'is_organizer': self.user.is_organizer,
+            'organization': self.user.organization,
         }
         
         return data

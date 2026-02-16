@@ -32,19 +32,28 @@ export const useUserProfile = () => {
 export const useLogin = () => {
   const { checkAuth } = useAuth();
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
 
   return useMutation({
     mutationFn: (payload: LoginPayload) => userService.login(payload),
-    onSuccess: (data:any) => {
-      // Store token
-    //   console.log("Login successful, token:", data);
+    onSuccess: (data) => {
+      // Store tokens
+      console.log("Login successful:", data);
       localStorage.setItem("authToken", data.access);
+      localStorage.setItem("refreshToken", data.refresh);
 
       // Update auth state
       checkAuth();
 
       // Set user profile in cache
       queryClient.setQueryData(userKeys.profile(), data.user);
+
+      // Navigate based on user type
+      if (data.user.is_organizer) {
+        navigate("/dashboard");
+      } else {
+        navigate("/events"); // Customers go to events page
+      }
     },
     onError: (error: any) => {
       console.error("Login failed:", error);
@@ -54,18 +63,12 @@ export const useLogin = () => {
 
 // Hook: Register
 export const useRegister = () => {
-  const { checkAuth } = useAuth();
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: (payload: RegisterPayload) => userService.register(payload),
-    onSuccess: (data:any) => {
-      // Store token
+    onSuccess: (data) => {
       console.log("Registration successful:", data);
-      localStorage.setItem("authToken", data.token);
-
-      // Update auth state
-      checkAuth();
 
       // Set user profile in cache
       queryClient.setQueryData(userKeys.profile(), data.user);
@@ -92,26 +95,42 @@ export const useUpdateProfile = () => {
         userKeys.profile(),
       );
 
-      // Optimistically update to the new value
-      if (previousProfile) {
+      // Optimistically update ONLY for non-file updates
+      if (previousProfile && !(newProfile.profile_picture instanceof File)) {
+        // Only update fields that are strings, not Files
+        const optimisticUpdate: Partial<UserProfile> = {};
+
+        if (newProfile.first_name)
+          optimisticUpdate.first_name = newProfile.first_name;
+        if (newProfile.last_name)
+          optimisticUpdate.last_name = newProfile.last_name;
+        if (newProfile.phone_number)
+          optimisticUpdate.phone_number = newProfile.phone_number;
+        if (newProfile.organization)
+          optimisticUpdate.organization = newProfile.organization;
+
         queryClient.setQueryData<UserProfile>(userKeys.profile(), {
           ...previousProfile,
-          ...newProfile,
+          ...optimisticUpdate,
         });
       }
 
       // Return context with the snapshot
       return { previousProfile };
     },
-    onError: (error:any, context:any) => {
+    onError: (error: any, _variables, context: any) => {
       // Rollback to the previous value on error
       if (context?.previousProfile) {
         queryClient.setQueryData(userKeys.profile(), context.previousProfile);
       }
       console.error("Update profile failed:", error);
     },
+    onSuccess: (data) => {
+      // Set the actual response data (which will have the profile_picture URL if uploaded)
+      queryClient.setQueryData(userKeys.profile(), data);
+    },
     onSettled: () => {
-      // Refetch after error or success
+      // Refetch after error or success to ensure data is in sync
       queryClient.invalidateQueries({ queryKey: userKeys.profile() });
     },
   });
@@ -122,7 +141,7 @@ export const useChangePassword = () => {
   return useMutation({
     mutationFn: (payload: ChangePasswordPayload) =>
       userService.changePassword(payload),
-    onSuccess: (data:any) => {
+    onSuccess: (data) => {
       console.log("Password changed successfully:", data.message);
     },
     onError: (error: any) => {
@@ -140,8 +159,9 @@ export const useDeleteAccount = () => {
   return useMutation({
     mutationFn: userService.deleteAccount,
     onSuccess: () => {
-      // Remove token
+      // Remove tokens
       localStorage.removeItem("authToken");
+      localStorage.removeItem("refreshToken");
 
       // Update auth state
       checkAuth();
@@ -165,8 +185,9 @@ export const useLogout = () => {
   const queryClient = useQueryClient();
 
   const logout = () => {
-    // Remove token
+    // Remove tokens
     localStorage.removeItem("authToken");
+    localStorage.removeItem("refreshToken");
 
     // Update auth state
     checkAuth();
@@ -174,9 +195,31 @@ export const useLogout = () => {
     // Clear all queries
     queryClient.clear();
 
-    // Navigate to login
+    // Navigate to home
     navigate("/");
   };
 
   return { logout };
+};
+
+// Hook: Check if user is organizer
+export const useIsOrganizer = () => {
+  const { data: user } = useUserProfile();
+  return user?.is_organizer ?? false;
+};
+
+// Hook: Check if user is customer
+export const useIsCustomer = () => {
+  const { data: user } = useUserProfile();
+  return user?.is_customer ?? false;
+};
+
+// Hook: Get user type
+export const useUserType = () => {
+  const { data: user } = useUserProfile();
+  return {
+    userType: user?.user_type,
+    isOrganizer: user?.is_organizer ?? false,
+    isCustomer: user?.is_customer ?? false,
+  };
 };

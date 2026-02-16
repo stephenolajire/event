@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
@@ -28,6 +28,11 @@ interface LoginFormData {
 
 const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // Get the page user was trying to access before being redirected to login
+  const from = (location.state as any)?.from?.pathname || null;
 
   useEffect(() => {
     AOS.init({
@@ -46,15 +51,28 @@ const Login = () => {
 
   const { mutate: login, isPending } = useLogin();
 
-  const navigate = useNavigate();
-
   const onSubmit = (data: LoginFormData) => {
     login(data, {
-      onSuccess: () => {
+      onSuccess: (response) => {
         toast.success("Login successful! Redirecting...");
+
+        // Determine redirect path
+        let redirectPath = "/dashboard"; // Default for organizers
+
+        if (from) {
+          // Redirect to the page they were trying to access
+          redirectPath = from;
+        } else if (response.user.is_customer) {
+          // Default path for customers
+          redirectPath = "/event";
+        } else if (response.user.is_organizer) {
+          // Default path for organizers
+          redirectPath = "/dashboard";
+        }
+
         setTimeout(() => {
-          navigate("/dashboard", { replace: true });
-        }, 2000);
+          navigate(redirectPath, { replace: true });
+        }, 1000);
       },
       onError: (error: any) => {
         const errorMessage =

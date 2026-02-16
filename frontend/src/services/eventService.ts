@@ -1,7 +1,13 @@
 import axiosInstance from "../constant/api";
 
 // Types
-export type EventStatus = "draft" | "published" | "cancelled" | "completed" | "upcoming" | "past";
+export type EventStatus =
+  | "draft"
+  | "published"
+  | "cancelled"
+  | "completed"
+  | "upcoming"
+  | "past";
 
 export interface EventListItem {
   id: number;
@@ -16,6 +22,9 @@ export interface EventListItem {
   attendance_rate: number;
   banner_image: string;
   created_at: string;
+  slug: string;
+  ticket_purchase_link: string;
+  has_tickets: boolean;
 }
 
 export interface OrganizerDetails {
@@ -61,6 +70,7 @@ export interface EventDetail {
   available_slots: number;
   created_at: string;
   updated_at: string;
+  slug:string;
 }
 
 export interface CreateEventPayload {
@@ -163,6 +173,11 @@ const eventService = {
           ? { "Content-Type": "multipart/form-data" }
           : { "Content-Type": "application/json" },
     });
+    return response.data;
+  },
+
+  getEventBySlug: async (slug: string) => {
+    const response = await axiosInstance.get(`/events/by-slug/${slug}/`);
     return response.data;
   },
 

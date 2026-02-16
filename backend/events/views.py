@@ -1,11 +1,17 @@
 from rest_framework import viewsets, status, filters
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from django.shortcuts import get_object_or_404
+from . import permissions
 
 from .models import Event
-from .serializers import EventSerializer, EventListSerializer, EventStatsSerializer
+from .serializers import (
+    EventSerializer, 
+    EventListSerializer, 
+    EventStatsSerializer,
+    PublicEventSerializer
+)
 from .permissions import IsEventOrganizer
 
 
@@ -53,21 +59,26 @@ class EventViewSet(viewsets.ModelViewSet):
             return EventListSerializer
         elif self.action == 'stats':
             return EventStatsSerializer
+        elif self.action in ['get_by_slug', 'get_by_uuid']:
+            return PublicEventSerializer
         return EventSerializer
     
     def get_permissions(self):
         """
-        Instantiate and return the list of permissions.
-        Only the organizer can update or delete an event.
+        Allow public to list and retrieve events
+        Only organizers can create events
+        Only owners can update/delete their events
         """
-        if self.action in ['update', 'partial_update', 'destroy']:
+        if self.action in ['list', 'retrieve']:
+            permission_classes = [permissions.AllowAny]
+        elif self.action == 'create':
             permission_classes = [IsAuthenticated, IsEventOrganizer]
         else:
-            permission_classes = [IsAuthenticated]
+            permission_classes = [IsAuthenticated, permissions.IsOwnerOrReadOnly]
         return [permission() for permission in permission_classes]
     
     def perform_create(self, serializer):
-        """Save the organizer as the current user."""
+        """Automatically set the organizer to the current user."""
         serializer.save(organizer=self.request.user)
     
     @action(detail=True, methods=['get'])
@@ -79,6 +90,47 @@ class EventViewSet(viewsets.ModelViewSet):
         """
         event = self.get_object()
         serializer = EventStatsSerializer(event)
+        return Response(serializer.data)
+    
+    @action(detail=True, methods=['get'])
+    def ticket_link(self, request, pk=None):
+        """
+        Get shareable ticket purchase link.
+        
+        GET /api/events/{id}/ticket_link/
+        """
+        event = self.get_object()
+        from django.conf import settings
+        base_url = getattr(settings, 'FRONTEND_URL', 'http://localhost:5173')
+        
+        return Response({
+            'slug_link': event.get_ticket_purchase_link(base_url),
+            'uuid_link': event.get_ticket_purchase_link_by_id(base_url),
+            'slug': event.slug,
+            'unique_id': str(event.unique_id),
+            'has_tickets': event.has_tickets
+        })
+    
+    @action(detail=False, methods=['get'], url_path='by-slug/(?P<slug>[-\w]+)', permission_classes=[AllowAny])
+    def get_by_slug(self, request, slug=None):
+        """
+        Get event by slug for public ticket purchase page.
+        
+        GET /api/events/by-slug/{slug}/
+        """
+        event = get_object_or_404(Event, slug=slug, is_public=True, status='published')
+        serializer = self.get_serializer(event)
+        return Response(serializer.data)
+    
+    @action(detail=False, methods=['get'], url_path='by-id/(?P<unique_id>[0-9a-f-]+)', permission_classes=[AllowAny])
+    def get_by_uuid(self, request, unique_id=None):
+        """
+        Get event by UUID for public ticket purchase page.
+        
+        GET /api/events/by-id/{uuid}/
+        """
+        event = get_object_or_404(Event, unique_id=unique_id, is_public=True, status='published')
+        serializer = self.get_serializer(event)
         return Response(serializer.data)
     
     @action(detail=True, methods=['post'])

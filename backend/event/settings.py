@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'checkin.apps.CheckinConfig',
     'notifications.apps.NotificationsConfig',
     'analytics.apps.AnalyticsConfig',
+    'ticket',
 ]
 
 MIDDLEWARE = [
@@ -227,7 +228,7 @@ QR_CODE_SECRET_KEY = os.environ.get('QR_CODE_SECRET_KEY', SECRET_KEY)
 QR_CODE_DIR = MEDIA_ROOT / 'qr_codes'
 
 # Frontend URL (for email links)
-FRONTEND_URL = os.environ.get('FRONTEND_URL')
+FRONTEND_URL = config('FRONTEND_URL', default='http://localhost:5173')
 
 # DRF Spectacular Settings
 SPECTACULAR_SETTINGS = {

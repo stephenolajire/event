@@ -3,8 +3,6 @@ import {
   LayoutDashboard,
   Calendar,
   Users,
-  ScanLine,
-  BarChart3,
   Settings,
   ChevronLeft,
   ChevronRight,
@@ -21,7 +19,7 @@ interface SidebarProps {
   setMobileSidebarOpen: (open: boolean) => void;
 }
 
-const Sidebar = ({
+const EventSidebar = ({
   collapsed,
   setCollapsed,
   mobileSidebarOpen,
@@ -34,45 +32,27 @@ const Sidebar = ({
       id: "dashboard",
       label: "Dashboard",
       icon: LayoutDashboard,
-      path: "/dashboard",
+      path: "/event",
     },
     {
-      id: "events",
-      label: "Events",
+      id: "Tickets",
+      label: "Tickets",
       icon: Calendar,
-      path: "/dashboard/events",
+      path: "/event/tickets",
       //   badge: "12",
     },
     {
-      id: "guests",
-      label: "Guests",
+      id: "Orders",
+      label: "Orders",
       icon: Users,
-      path: "/dashboard/guests",
+      path: "/event/orders",
     },
-    // {
-    //   id: "qr-codes",
-    //   label: "QR Codes",
-    //   icon: QrCode,
-    //   path: "/dashboard/qr-codes",
-    // },
     {
-      id: "Ticket",
-      label: "Ticket",
-      icon: ScanLine,
-      path: "/ticket",
+      id: "Upcoming-Event",
+      label: "Event",
+      icon: Calendar,
+      path: "/event/browse-events",
     },
-    // {
-    //   id: "invitations",
-    //   label: "Invitations",
-    //   icon: Mail,
-    //   path: "/dashboard/invitations",
-    // },
-    // {
-    //   id: "analytics",
-    //   label: "Analytics",
-    //   icon: BarChart3,
-    //   path: "/dashboard/analytics",
-    // },
   ];
 
   const bottomMenuItems = [
@@ -80,7 +60,7 @@ const Sidebar = ({
       id: "settings",
       label: "Settings",
       icon: Settings,
-      path: "/dashboard/settings",
+      path: "/event/settings",
     },
     // {
     //   id: "help",
@@ -222,30 +202,8 @@ const Sidebar = ({
           ))}
         </ul>
       </nav>
-
-      {/* Upgrade Banner - Only show when not collapsed */}
-      {!collapsed && (
-        <div className="m-4 p-4 bg-linear-to-br from-primary-800 to-primary-900 rounded-xl border border-primary-700">
-          <div className="flex items-start gap-3 mb-3">
-            <div className="w-8 h-8 bg-primary-600 rounded-lg flex items-center justify-center shrink-0">
-              <BarChart3 size={16} className="text-light" />
-            </div>
-            <div>
-              <h4 className="text-sm font-semibold text-light mb-1">
-                Upgrade to Pro
-              </h4>
-              <p className="text-xs text-primary-300">
-                Unlock unlimited events & advanced features
-              </p>
-            </div>
-          </div>
-          <button className="w-full bg-primary-600 hover:bg-primary-700 text-light text-sm font-semibold py-2 rounded-lg transition-colors">
-            Upgrade Now
-          </button>
-        </div>
-      )}
     </aside>
   );
 };
 
-export default Sidebar;
+export default EventSidebar;

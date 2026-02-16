@@ -21,7 +21,7 @@ interface SidebarProps {
   setMobileSidebarOpen: (open: boolean) => void;
 }
 
-const Sidebar = ({
+const TicketSidebar = ({
   collapsed,
   setCollapsed,
   mobileSidebarOpen,
@@ -34,20 +34,20 @@ const Sidebar = ({
       id: "dashboard",
       label: "Dashboard",
       icon: LayoutDashboard,
-      path: "/dashboard",
+      path: "/ticket",
     },
     {
-      id: "events",
-      label: "Events",
+      id: "Tickets",
+      label: "Tickets",
       icon: Calendar,
-      path: "/dashboard/events",
+      path: "/ticket/tickets",
       //   badge: "12",
     },
     {
-      id: "guests",
-      label: "Guests",
+      id: "Orders",
+      label: "Orders",
       icon: Users,
-      path: "/dashboard/guests",
+      path: "/ticket/orders",
     },
     // {
     //   id: "qr-codes",
@@ -56,17 +56,17 @@ const Sidebar = ({
     //   path: "/dashboard/qr-codes",
     // },
     {
-      id: "Ticket",
-      label: "Ticket",
+      id: "check-in",
+      label: "Check-in",
       icon: ScanLine,
-      path: "/ticket",
+      path: "/dashboard/check-in",
     },
-    // {
-    //   id: "invitations",
-    //   label: "Invitations",
-    //   icon: Mail,
-    //   path: "/dashboard/invitations",
-    // },
+    {
+      id: "Event",
+      label: "Event",
+      icon: Calendar,
+      path: "/dashboard",
+    },
     // {
     //   id: "analytics",
     //   label: "Analytics",
@@ -248,4 +248,4 @@ const Sidebar = ({
   );
 };
 
-export default Sidebar;
+export default TicketSidebar;

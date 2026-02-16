@@ -2,6 +2,8 @@ from django.db import models
 from django.conf import settings
 from django.utils.translation import gettext_lazy as _
 from django.core.validators import MinValueValidator
+from django.utils.text import slugify
+import uuid
 
 
 class Event(models.Model):
@@ -17,11 +19,14 @@ class Event(models.Model):
     
     # Basic Information
     organizer = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
+        'accounts.User',
         on_delete=models.CASCADE,
-        related_name='events'
+        related_name='events',
+        limit_choices_to={'user_type': 'organizer'}  
     )
     title = models.CharField(max_length=255)
+    slug = models.SlugField(max_length=300, unique=True, blank=True, null=True)
+    unique_id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True, blank=True, null=True)
     description = models.TextField(blank=True, null=True)
     
     # Event Details
@@ -93,10 +98,48 @@ class Event(models.Model):
             models.Index(fields=['-event_date']),
             models.Index(fields=['organizer', '-created_at']),
             models.Index(fields=['status']),
+            models.Index(fields=['slug']),
+            models.Index(fields=['unique_id']),
         ]
     
     def __str__(self):
         return self.title
+    
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = self.generate_unique_slug()
+        super().save(*args, **kwargs)
+    
+    def generate_unique_slug(self):
+        """Generate a unique slug for the event"""
+        base_slug = slugify(self.title)
+        slug = base_slug
+        counter = 1
+        
+        while Event.objects.filter(slug=slug).exists():
+            slug = f"{base_slug}-{counter}"
+            counter += 1
+        
+        return slug
+    
+    def get_ticket_purchase_link(self, base_url=None):
+        """Generate shareable link for ticket purchase"""
+        if base_url is None:
+            base_url = settings.FRONTEND_URL if hasattr(settings, 'FRONTEND_URL') else 'http://localhost:5173'
+        
+        return f"{base_url}/events/{self.slug}/tickets"
+    
+    def get_ticket_purchase_link_by_id(self, base_url=None):
+        """Generate shareable link using UUID (alternative method)"""
+        if base_url is None:
+            base_url = settings.FRONTEND_URL if hasattr(settings, 'FRONTEND_URL') else 'http://localhost:5173'
+        
+        return f"{base_url}/events/{self.unique_id}/tickets"
+    
+    @property
+    def has_tickets(self):
+        """Check if event has ticket types"""
+        return self.ticket_types.exists()
     
     @property
     def total_guests(self):

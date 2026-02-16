@@ -19,6 +19,17 @@ export const eventKeys = {
 };
 
 // Hook: Get All Events
+export const useEventBySlug = (slug: string | undefined) => {
+  return useQuery({
+    queryKey: ["event", "slug", slug],
+    queryFn: () => {
+      if (!slug) throw new Error("Slug is required");
+      return eventService.getEventBySlug(slug);
+    },
+    enabled: !!slug,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+};
 export const useEvents = (params?: EventListParams) => {
   return useQuery({
     queryKey: eventKeys.list(params),

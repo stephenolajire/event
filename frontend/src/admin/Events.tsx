@@ -13,6 +13,10 @@ import {
   Grid,
   List,
   Loader2,
+  Share2,
+  Copy,
+  Check,
+  ExternalLink,
 } from "lucide-react";
 import AOS from "aos";
 import { Link } from "react-router-dom";
@@ -34,6 +38,9 @@ const Events = () => {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [eventToDelete, setEventToDelete] = useState<number | null>(null);
+  const [copiedEventId, setCopiedEventId] = useState<number | null>(null);
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [shareEvent, setShareEvent] = useState<EventListItem | null>(null);
 
   // Fetch events with proper default
   const {
@@ -45,11 +52,11 @@ const Events = () => {
     ...(filterStatus !== "all" && { status: filterStatus }),
     ...(searchQuery && { search: searchQuery }),
   });
-  
+
   // Ensure events is always an array
   const events = Array.isArray(eventsData) ? eventsData : [];
 
-  const { mutate: deleteEvent, isPending: isDeleting } = useDeleteEvent();
+  const { mutate: deleteEvent, isPending:isDeleting} = useDeleteEvent();
 
   useEffect(() => {
     AOS.init({
@@ -85,11 +92,6 @@ const Events = () => {
     }
   };
 
-//   const getAttendancePercentage = (registered: number, capacity: number) => {
-//     if (!capacity) return 0;
-//     return Math.round((registered / capacity) * 100);
-//   };
-
   const handleView = (event: EventListItem) => {
     setSelectedEvent(event);
     setShowViewModal(true);
@@ -109,25 +111,54 @@ const Events = () => {
     if (eventToDelete) {
       deleteEvent(eventToDelete, {
         onSuccess: () => {
-          toast.success("Event deleted successfully!", {
-            position: "top-right",
-            autoClose: 3000,
-            theme: "dark",
-          });
+          toast.success("Event deleted successfully!");
           setShowDeleteConfirm(false);
           setEventToDelete(null);
         },
         onError: (error: any) => {
           toast.error(
-            error?.response?.data?.message || "Failed to delete event",
-            {
-              position: "top-right",
-              autoClose: 5000,
-              theme: "dark",
-            },
+            error?.response?.data?.message || "Failed to delete event"
           );
         },
       });
+    }
+  };
+
+  const handleCopyTicketLink = async (event: EventListItem) => {
+    const ticketLink =
+      event.ticket_purchase_link ||
+      `${window.location.origin}/events/${event.slug}/tickets`;
+
+    try {
+      await navigator.clipboard.writeText(ticketLink);
+      setCopiedEventId(event.id);
+      toast.success("Ticket link copied to clipboard!");
+      setTimeout(() => setCopiedEventId(null), 2000);
+    } catch (error) {
+      toast.error("Failed to copy link");
+    }
+  };
+
+  const handleShare = (event: EventListItem) => {
+    const ticketLink =
+      event.ticket_purchase_link ||
+      `${window.location.origin}/events/${event.slug}/tickets`;
+
+    if (navigator.share) {
+      navigator
+        .share({
+          title: event.title,
+          text: `Get your tickets for ${event.title}`,
+          url: ticketLink,
+        })
+        .catch((error) => {
+          if (error.name !== "AbortError") {
+            console.error("Error sharing:", error);
+          }
+        });
+    } else {
+      setShareEvent(event);
+      setShowShareModal(true);
     }
   };
 
@@ -374,6 +405,36 @@ const Events = () => {
                   </div>
                 </div>
 
+                {/* Share Ticket Link - Show only if event has tickets */}
+                {event.has_tickets && (
+                  <div className="mb-4 flex items-center gap-2">
+                    <button
+                      onClick={() => handleCopyTicketLink(event)}
+                      className="flex-1 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-light text-xs font-medium rounded-lg transition-colors flex items-center justify-center gap-1"
+                      title="Copy ticket link"
+                    >
+                      {copiedEventId === event.id ? (
+                        <>
+                          <Check size={14} />
+                          Copied!
+                        </>
+                      ) : (
+                        <>
+                          <Copy size={14} />
+                          Copy Link
+                        </>
+                      )}
+                    </button>
+                    <button
+                      onClick={() => handleShare(event)}
+                      className="px-3 py-2 bg-dark border border-primary-800 hover:border-blue-600 text-primary-300 hover:text-blue-400 text-xs font-medium rounded-lg transition-all"
+                      title="Share ticket link"
+                    >
+                      <Share2 size={14} />
+                    </button>
+                  </div>
+                )}
+
                 {/* Actions */}
                 <div className="flex items-center gap-2">
                   <button
@@ -455,7 +516,37 @@ const Events = () => {
                 </div>
 
                 {/* Actions */}
-                <div className="flex items-center gap-2 shrink-0">
+                <div className="flex items-center gap-2 shrink-0 flex-wrap">
+                  {/* Share buttons - Show only if event has tickets */}
+                  {event.has_tickets && (
+                    <>
+                      <button
+                        onClick={() => handleCopyTicketLink(event)}
+                        className="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-light text-sm font-medium rounded-lg transition-colors flex items-center gap-2"
+                        title="Copy ticket link"
+                      >
+                        {copiedEventId === event.id ? (
+                          <>
+                            <Check size={14} />
+                            Copied
+                          </>
+                        ) : (
+                          <>
+                            <Copy size={14} />
+                            Copy Link
+                          </>
+                        )}
+                      </button>
+                      <button
+                        onClick={() => handleShare(event)}
+                        className="p-2 bg-dark border border-primary-800 hover:border-blue-600 text-primary-300 hover:text-blue-400 rounded-lg transition-all"
+                        title="Share"
+                      >
+                        <Share2 size={16} />
+                      </button>
+                    </>
+                  )}
+
                   <button
                     onClick={() => handleView(event)}
                     className="px-4 py-2 bg-primary-600 hover:bg-primary-700 text-light text-sm font-medium rounded-lg transition-colors flex items-center gap-2"
@@ -525,6 +616,67 @@ const Events = () => {
             }}
           />
         </>
+      )}
+
+      {/* Share Modal */}
+      {showShareModal && shareEvent && (
+        <div className="fixed inset-0 bg-dark/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div
+            className="bg-dark-light border border-primary-900 rounded-xl max-w-md w-full p-6"
+            data-aos="zoom-in"
+          >
+            <h3 className="font-heading text-xl font-bold text-light mb-4">
+              Share Ticket Link
+            </h3>
+
+            <div className="bg-dark border border-primary-800 rounded-lg p-3 mb-4">
+              <p className="text-sm text-primary-300 break-all">
+                {shareEvent.ticket_purchase_link ||
+                  `${window.location.origin}/events/${shareEvent.slug}/tickets`}
+              </p>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => handleCopyTicketLink(shareEvent)}
+                className="flex-1 px-4 py-2 bg-primary-600 hover:bg-primary-700 text-light rounded-lg font-medium transition-all flex items-center justify-center gap-2"
+              >
+                {copiedEventId === shareEvent.id ? (
+                  <>
+                    <Check size={18} />
+                    Copied!
+                  </>
+                ) : (
+                  <>
+                    <Copy size={18} />
+                    Copy Link
+                  </>
+                )}
+              </button>
+              
+                <a href={
+                  shareEvent.ticket_purchase_link ||
+                  `${window.location.origin}/events/${shareEvent.slug}/tickets`
+                }
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-4 py-2 bg-dark border border-primary-800 hover:border-primary-600 text-light rounded-lg font-medium transition-all flex items-center gap-2"
+              >
+                <ExternalLink size={18} />
+                Preview
+              </a>
+              <button
+                onClick={() => {
+                  setShowShareModal(false);
+                  setShareEvent(null);
+                }}
+                className="px-4 py-2 bg-dark border border-primary-800 hover:border-primary-600 text-light rounded-lg font-medium transition-all"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Delete Confirmation Modal */}

@@ -13,12 +13,13 @@ import {
   Building,
   Loader,
   Phone,
+  Users,
+  ShoppingBag,
 } from "lucide-react";
 import AOS from "aos";
 import "aos/dist/aos.css";
 import { useRegister } from "../hooks/useUser";
 import { toast } from "react-toastify";
-// import showToast, { ToastMessages } from "../utils/toastUtils";
 
 // Validation Schema
 const signupSchema = yup.object().shape({
@@ -41,7 +42,16 @@ const signupSchema = yup.object().shape({
       /^[+]?[(]?[0-9]{1,4}[)]?[-\s.]?[(]?[0-9]{1,4}[)]?[-\s.]?[0-9]{1,9}$/,
       "Please enter a valid phone number",
     ),
-  organization: yup.string().required("Organization is required"),
+  user_type: yup
+    .string()
+    .oneOf(["customer", "organizer"], "Please select a valid user type")
+    .required("User type is required"),
+  organization: yup.string().when("user_type", {
+    is: "organizer",
+    then: (schema) =>
+      schema.required("Organization is required for event organizers"),
+    otherwise: (schema) => schema.notRequired(),
+  }),
   password: yup
     .string()
     .min(8, "Password must be at least 8 characters")
@@ -65,7 +75,8 @@ interface SignupFormData {
   last_name: string;
   email: string;
   phone_number: string;
-  organization: string;
+  user_type: "customer" | "organizer";
+  organization?: string;
   password: string;
   password2: string;
   terms: boolean;
@@ -85,18 +96,29 @@ const Signup = () => {
   const {
     register,
     handleSubmit,
+    watch,
     formState: { errors },
   } = useForm<SignupFormData>({
     resolver: yupResolver(signupSchema),
+    defaultValues: {
+      user_type: "customer",
+    },
   });
 
   const navigate = useNavigate();
-
   const { mutate: registerUser, isPending } = useRegister();
+
+  // Watch user_type to conditionally show organization field
+  const userType = watch("user_type");
 
   const onSubmit = (data: SignupFormData) => {
     // Remove the terms field before sending to API
     const { terms, ...registerData } = data;
+
+    // If customer, remove organization field
+    if (registerData.user_type === "customer") {
+      delete registerData.organization;
+    }
 
     registerUser(registerData, {
       onSuccess: () => {
@@ -106,7 +128,10 @@ const Signup = () => {
         }, 2000);
       },
       onError: (error: any) => {
-        toast.error( error.response?.data?.detail || "Registration failed. Please try again." );
+        toast.error(
+          error.response?.data?.detail ||
+            "Registration failed. Please try again.",
+        );
       },
     });
   };
@@ -131,12 +156,99 @@ const Signup = () => {
               Create Your Account
             </h2>
             <p className="text-primary-300">
-              Start managing your events with EventInvite
+              Start managing your events or purchasing tickets with EventInvite
             </p>
           </div>
 
           {/* Signup Form */}
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+            {/* User Type Selection */}
+            <div className="w-full">
+              <label className="block text-sm font-medium text-primary-300 mb-3">
+                I want to
+              </label>
+              <div className="grid grid-cols-2 gap-4">
+                {/* Customer Option */}
+                <label
+                  className={`relative flex flex-col items-center p-4 border-2 rounded-lg cursor-pointer transition-all ${
+                    userType === "customer"
+                      ? "border-primary-600 bg-primary-900/20"
+                      : "border-primary-800 hover:border-primary-700"
+                  } ${isPending ? "opacity-50 cursor-not-allowed" : ""}`}
+                >
+                  <input
+                    type="radio"
+                    value="customer"
+                    disabled={isPending}
+                    className="sr-only"
+                    {...register("user_type")}
+                  />
+                  <ShoppingBag
+                    size={32}
+                    className={`mb-2 ${
+                      userType === "customer"
+                        ? "text-primary-400"
+                        : "text-primary-600"
+                    }`}
+                  />
+                  <span
+                    className={`font-semibold ${
+                      userType === "customer"
+                        ? "text-light"
+                        : "text-primary-300"
+                    }`}
+                  >
+                    Buy Tickets
+                  </span>
+                  <span className="text-xs text-primary-500 mt-1 text-center">
+                    Purchase event tickets
+                  </span>
+                </label>
+
+                {/* Organizer Option */}
+                <label
+                  className={`relative flex flex-col items-center p-4 border-2 rounded-lg cursor-pointer transition-all ${
+                    userType === "organizer"
+                      ? "border-primary-600 bg-primary-900/20"
+                      : "border-primary-800 hover:border-primary-700"
+                  } ${isPending ? "opacity-50 cursor-not-allowed" : ""}`}
+                >
+                  <input
+                    type="radio"
+                    value="organizer"
+                    disabled={isPending}
+                    className="sr-only"
+                    {...register("user_type")}
+                  />
+                  <Users
+                    size={32}
+                    className={`mb-2 ${
+                      userType === "organizer"
+                        ? "text-primary-400"
+                        : "text-primary-600"
+                    }`}
+                  />
+                  <span
+                    className={`font-semibold ${
+                      userType === "organizer"
+                        ? "text-light"
+                        : "text-primary-300"
+                    }`}
+                  >
+                    Create Events
+                  </span>
+                  <span className="text-xs text-primary-500 mt-1 text-center">
+                    Organize and manage events
+                  </span>
+                </label>
+              </div>
+              {errors.user_type && (
+                <p className="mt-2 text-sm text-red-400">
+                  {errors.user_type.message}
+                </p>
+              )}
+            </div>
+
             {/* Name Fields */}
             <div className="grid md:grid-cols-2 gap-6">
               {/* First Name */}
@@ -270,37 +382,39 @@ const Signup = () => {
                 )}
               </div>
 
-              {/* Organization */}
-              <div className="w-full">
-                <label
-                  htmlFor="organization"
-                  className="block text-sm font-medium text-primary-300 mb-2"
-                >
-                  Organization
-                </label>
-                <div className="relative">
-                  <div className="absolute left-4 top-1/2 -translate-y-1/2 text-primary-500">
-                    <Building size={20} />
+              {/* Organization - Only shown for organizers */}
+              {userType === "organizer" && (
+                <div className="w-full">
+                  <label
+                    htmlFor="organization"
+                    className="block text-sm font-medium text-primary-300 mb-2"
+                  >
+                    Organization <span className="text-red-400">*</span>
+                  </label>
+                  <div className="relative">
+                    <div className="absolute left-4 top-1/2 -translate-y-1/2 text-primary-500">
+                      <Building size={20} />
+                    </div>
+                    <input
+                      type="text"
+                      id="organization"
+                      placeholder="Your company"
+                      disabled={isPending}
+                      className={`w-full pl-12 pr-4 py-3 bg-dark border ${
+                        errors.organization
+                          ? "border-red-500 focus:border-red-500 focus:ring-red-500/20"
+                          : "border-primary-800 focus:border-primary-600 focus:ring-primary-600/20"
+                      } rounded-lg text-light placeholder-primary-600 focus:outline-none focus:ring-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed`}
+                      {...register("organization")}
+                    />
                   </div>
-                  <input
-                    type="text"
-                    id="organization"
-                    placeholder="Your company"
-                    disabled={isPending}
-                    className={`w-full pl-12 pr-4 py-3 bg-dark border ${
-                      errors.organization
-                        ? "border-red-500 focus:border-red-500 focus:ring-red-500/20"
-                        : "border-primary-800 focus:border-primary-600 focus:ring-primary-600/20"
-                    } rounded-lg text-light placeholder-primary-600 focus:outline-none focus:ring-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed`}
-                    {...register("organization")}
-                  />
+                  {errors.organization && (
+                    <p className="mt-1 text-sm text-red-400">
+                      {errors.organization.message}
+                    </p>
+                  )}
                 </div>
-                {errors.organization && (
-                  <p className="mt-1 text-sm text-red-400">
-                    {errors.organization.message}
-                  </p>
-                )}
-              </div>
+              )}
             </div>
 
             {/* Password Input */}

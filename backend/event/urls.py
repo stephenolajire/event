@@ -17,6 +17,7 @@ urlpatterns = [
     path('api/guests/', include('guests.urls')),
     path('api/qr-codes/', include('qr_codes.urls')),
     path('api/checkin/', include('checkin.urls')),
+    path('api/ticket/', include('ticket.urls')),
     path('api/notifications/', include('notifications.urls')),
     path('api/analytics/', include('analytics.urls')),
     path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
