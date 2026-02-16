@@ -70,7 +70,7 @@ class EventViewSet(viewsets.ModelViewSet):
         Only owners can update/delete their events
         """
         if self.action in ['list', 'retrieve']:
-            permission_classes = [permissions.AllowAny]
+            permission_classes = [AllowAny]
         elif self.action == 'create':
             permission_classes = [IsAuthenticated, IsEventOrganizer]
         else:
