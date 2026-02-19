@@ -7,7 +7,8 @@ from decimal import Decimal
 class PaystackPaymentHandler:
     """Handler for Paystack payment integration"""
     BASE_URL = "https://api.paystack.co"
-    
+    USD_TO_NGN_RATE = Decimal('1600.00')
+
     @staticmethod
     def initialize_payment(order):
         """
@@ -19,11 +20,15 @@ class PaystackPaymentHandler:
             "Authorization": f"Bearer {settings.PAYSTACK_SECRET_KEY}",
             "Content-Type": "application/json"
         }
-        
+
+        # Convert USD to NGN at fixed rate
+        amount_in_ngn = order.total_amount * PaystackPaymentHandler.USD_TO_NGN_RATE
+
         # Prepare payment data
         data = {
             "email": order.customer_email,
-            "amount": int(order.total_amount * 100),  # Convert to kobo (smallest unit)
+            "amount": int(amount_in_ngn * 100),  # Convert to kobo (smallest unit)
+            "currency": "NGN",
             "reference": order.order_number,
             "callback_url": f"{settings.FRONTEND_URL}/payment/callback",
             "metadata": {
@@ -37,12 +42,12 @@ class PaystackPaymentHandler:
             },
             "channels": ["card", "bank", "ussd", "qr", "mobile_money", "bank_transfer"],
         }
-        
+
         try:
             response = requests.post(url, json=data, headers=headers, timeout=10)
             response.raise_for_status()
             result = response.json()
-            
+
             if result.get('status'):
                 return {
                     'status': True,
@@ -57,13 +62,13 @@ class PaystackPaymentHandler:
                     'status': False,
                     'message': result.get('message', 'Payment initialization failed'),
                 }
-                
+
         except requests.exceptions.RequestException as e:
             return {
                 'status': False,
                 'message': f'Payment gateway error: {str(e)}',
             }
-    
+
     @staticmethod
     def verify_payment(reference):
         """
@@ -74,12 +79,12 @@ class PaystackPaymentHandler:
         headers = {
             "Authorization": f"Bearer {settings.PAYSTACK_SECRET_KEY}"
         }
-        
+
         try:
             response = requests.get(url, headers=headers, timeout=10)
             response.raise_for_status()
             result = response.json()
-            
+
             if result.get('status'):
                 data = result.get('data', {})
                 return {
@@ -97,13 +102,13 @@ class PaystackPaymentHandler:
                     'status': False,
                     'message': result.get('message', 'Payment verification failed'),
                 }
-                
+
         except requests.exceptions.RequestException as e:
             return {
                 'status': False,
                 'message': f'Payment verification error: {str(e)}',
             }
-    
+
     @staticmethod
     def get_transaction(reference):
         """
@@ -113,7 +118,7 @@ class PaystackPaymentHandler:
         headers = {
             "Authorization": f"Bearer {settings.PAYSTACK_SECRET_KEY}"
         }
-        
+
         try:
             response = requests.get(url, headers=headers, timeout=10)
             response.raise_for_status()
