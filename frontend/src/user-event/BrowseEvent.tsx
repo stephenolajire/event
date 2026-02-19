@@ -40,7 +40,7 @@ const BrowseEvents = () => {
             {events.map((event, index) => (
               <Link
                 key={event.id}
-                to={`/events/${event.slug}/tickets`}
+                to={`/event/${event.slug}/tickets`}
                 data-aos="fade-up"
                 data-aos-delay={index * 100}
                 className="group bg-linear-to-br from-dark-light to-dark border border-primary-900 rounded-xl overflow-hidden hover:border-primary-600 transition-all hover:scale-105 hover:shadow-xl hover:shadow-primary-900/20"

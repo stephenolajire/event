@@ -14,6 +14,10 @@ import {
 } from "lucide-react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import AOS from "aos";
+import { toast } from "react-toastify";
+import ticketService from "../services/ticketService";
+import { useEvents } from "../hooks/useEvent";
+import type { UpdateTicketTypePayload } from "../services/ticketService";
 
 interface Benefit {
   id?: number;
@@ -24,50 +28,12 @@ interface Benefit {
 }
 
 const EditTicketType = () => {
-  const { ticketId } = useParams();
+  const { id } = useParams();
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Mock data - replace with API call
-  const mockTicket = {
-    id: 1,
-    event: "2",
-    name: "VIP Pass",
-    category: "vip",
-    description: "Full VIP experience with exclusive benefits",
-    price: "150.00",
-    quantity_available: "50",
-    sale_start_date: "2024-01-01T00:00",
-    sale_end_date: "2024-12-31T23:59",
-    min_purchase: "1",
-    max_purchase: "5",
-    is_active: true,
-    is_visible: true,
-    benefits: [
-      {
-        id: 1,
-        title: "2 VSOP Drinks",
-        description: "Complimentary premium drinks",
-        icon: "drink",
-        order: 0,
-      },
-      {
-        id: 2,
-        title: "VIP Lounge Access",
-        description: "Exclusive lounge with premium seating",
-        icon: "star",
-        order: 1,
-      },
-      {
-        id: 3,
-        title: "Meet & Greet",
-        description: "Exclusive meet and greet with performers",
-        icon: "heart",
-        order: 2,
-      },
-    ],
-  };
+  const { data: events, isLoading: eventsLoading } = useEvents();
 
   const [formData, setFormData] = useState({
     event: "",
@@ -90,12 +56,6 @@ const EditTicketType = () => {
     description: "",
     icon: "check",
   });
-
-  const events = [
-    { id: 1, title: "Birthday Party" },
-    { id: 2, title: "Tech Conference 2024" },
-    { id: 3, title: "Music Festival" },
-  ];
 
   const categories = [
     { value: "general", label: "General Admission" },
@@ -120,40 +80,53 @@ const EditTicketType = () => {
     "sparkles",
   ];
 
-  useEffect(() => {
-    AOS.init({
-      duration: 600,
-      once: true,
-    });
+  // Convert UTC ISO string from API to datetime-local format for input
+  const toDatetimeLocal = (isoString: string) => {
+    if (!isoString) return "";
+    const date = new Date(isoString);
+    // Format: YYYY-MM-DDTHH:MM
+    return date.toISOString().slice(0, 16);
+  };
 
-    // Simulate API call to fetch ticket data
+  useEffect(() => {
+    AOS.init({ duration: 600, once: true });
+
     const fetchTicket = async () => {
+      if (!id) return;
+
       try {
-        await new Promise((resolve) => setTimeout(resolve, 1000));
+        setIsLoading(true);
+        const ticket = await ticketService.getTicketTypeById(
+          parseInt(id),
+        );
+
         setFormData({
-          event: mockTicket.event,
-          name: mockTicket.name,
-          category: mockTicket.category,
-          description: mockTicket.description,
-          price: mockTicket.price,
-          quantity_available: mockTicket.quantity_available,
-          sale_start_date: mockTicket.sale_start_date,
-          sale_end_date: mockTicket.sale_end_date,
-          min_purchase: mockTicket.min_purchase,
-          max_purchase: mockTicket.max_purchase,
-          is_active: mockTicket.is_active,
-          is_visible: mockTicket.is_visible,
+          event: ticket.event.toString(),
+          name: ticket.name,
+          category: ticket.category,
+          description: ticket.description || "",
+          price: ticket.price.toString(),
+          quantity_available: ticket.quantity_available.toString(),
+          sale_start_date: toDatetimeLocal(ticket.sale_start_date),
+          sale_end_date: toDatetimeLocal(ticket.sale_end_date),
+          min_purchase: ticket.min_purchase.toString(),
+          max_purchase: ticket.max_purchase.toString(),
+          is_active: ticket.is_active,
+          is_visible: ticket.is_visible,
         });
-        setBenefits(mockTicket.benefits);
+
+        setBenefits(ticket.benefits || []);
       } catch (error) {
         console.error("Error fetching ticket:", error);
+        toast.error("Failed to load ticket data");
+        navigate("/dashboard/tickets");
       } finally {
         setIsLoading(false);
       }
     };
 
     fetchTicket();
-  }, [ticketId]);
+  }, [id, navigate]);
 
   const handleInputChange = (
     e: React.ChangeEvent<
@@ -170,40 +143,55 @@ const EditTicketType = () => {
 
   const handleAddBenefit = () => {
     if (newBenefit.title.trim()) {
-      setBenefits((prev) => [
-        ...prev,
-        {
-          ...newBenefit,
-          order: prev.length,
-        },
-      ]);
+      setBenefits((prev) => [...prev, { ...newBenefit, order: prev.length }]);
       setNewBenefit({ title: "", description: "", icon: "check" });
+      toast.success("Benefit added");
+    } else {
+      toast.error("Please enter a benefit title");
     }
   };
 
   const handleRemoveBenefit = (index: number) => {
     setBenefits((prev) => prev.filter((_, i) => i !== index));
+    toast.info("Benefit removed");
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!id) return;
+
     setIsSubmitting(true);
 
-    const ticketData = {
-      ...formData,
+    // Convert datetime-local to UTC ISO string
+    const toISO = (localDatetime: string) =>
+      new Date(localDatetime).toISOString();
+
+    const payload: UpdateTicketTypePayload = {
+      name: formData.name,
+      category: formData.category,
+      description: formData.description || undefined,
       price: parseFloat(formData.price),
       quantity_available: parseInt(formData.quantity_available),
+      sale_start_date: toISO(formData.sale_start_date),
+      sale_end_date: toISO(formData.sale_end_date),
       min_purchase: parseInt(formData.min_purchase),
       max_purchase: parseInt(formData.max_purchase),
+      is_active: formData.is_active,
+      is_visible: formData.is_visible,
       benefits: benefits,
     };
 
     try {
-      console.log("Updating ticket data:", ticketData);
-      await new Promise((resolve) => setTimeout(resolve, 1500));
+      await ticketService.updateTicketType(parseInt(id), payload);
+      toast.success("Ticket type updated successfully!");
       navigate("/dashboard/tickets");
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error updating ticket:", error);
+      const errorMessage =
+        error.response?.data?.message ||
+        error.response?.data?.detail ||
+        "Failed to update ticket type. Please try again.";
+      toast.error(errorMessage);
     } finally {
       setIsSubmitting(false);
     }
@@ -260,10 +248,13 @@ const EditTicketType = () => {
                 value={formData.event}
                 onChange={handleInputChange}
                 required
-                className="w-full px-4 py-3 bg-dark border border-primary-800 text-light rounded-lg focus:outline-none focus:border-primary-600 transition-colors"
+                disabled={eventsLoading}
+                className="w-full px-4 py-3 bg-dark border border-primary-800 text-light rounded-lg focus:outline-none focus:border-primary-600 transition-colors disabled:opacity-50"
               >
-                <option value="">Select an event</option>
-                {events.map((event) => (
+                <option value="">
+                  {eventsLoading ? "Loading events..." : "Select an event"}
+                </option>
+                {events?.map((event) => (
                   <option key={event.id} value={event.id}>
                     {event.title}
                   </option>
@@ -489,10 +480,7 @@ const EditTicketType = () => {
                 <select
                   value={newBenefit.icon}
                   onChange={(e) =>
-                    setNewBenefit((prev) => ({
-                      ...prev,
-                      icon: e.target.value,
-                    }))
+                    setNewBenefit((prev) => ({ ...prev, icon: e.target.value }))
                   }
                   className="w-full px-4 py-2 bg-dark border border-primary-800 text-light rounded-lg focus:outline-none focus:border-primary-600 transition-colors"
                 >
@@ -519,7 +507,7 @@ const EditTicketType = () => {
             <div className="space-y-2">
               {benefits.map((benefit, index) => (
                 <div
-                  key={index}
+                  key={benefit.id ?? index}
                   className="flex items-center justify-between p-4 bg-primary-900/10 border border-primary-800 rounded-lg"
                 >
                   <div className="flex items-center gap-3 flex-1">
