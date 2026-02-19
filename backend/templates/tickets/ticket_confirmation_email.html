@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <title>Your Tickets for {{ event.title }}</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background-color: #0a0a0a;
+      font-family: Inter, system-ui, Arial, sans-serif;
+      color: #ffffff;
+      -webkit-font-smoothing: antialiased;
+    }
+    a { color: #999999; text-decoration: none; }
+    a:hover { color: #ffffff; }
+  </style>
+</head>
+<body style="background-color: #0a0a0a; margin: 0; padding: 0;">
+
+  <!-- Wrapper -->
+  <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #0a0a0a; padding: 40px 16px;">
+    <tr>
+      <td align="center">
+        <table width="600" cellpadding="0" cellspacing="0" border="0" style="max-width: 600px; width: 100%;">
+
+          <!-- Header -->
+          <tr>
+            <td style="background-color: #000000; border: 1px solid #1a1a1a; border-radius: 16px 16px 0 0; padding: 40px 40px 32px; text-align: center;">
+              <div style="display: inline-block; background-color: #1a1a1a; border: 1px solid #333333; border-radius: 50%; width: 64px; height: 64px; line-height: 64px; text-align: center; margin-bottom: 20px;">
+                <span style="font-size: 28px;">🎫</span>
+              </div>
+              <h1 style="font-family: Poppins, Georgia, serif; font-size: 28px; font-weight: 700; color: #ffffff; margin-bottom: 8px; letter-spacing: -0.5px;">
+                Your Tickets Are Ready!
+              </h1>
+              <p style="font-size: 16px; color: #808080; line-height: 1.5;">
+                Thank you for your purchase, <strong style="color: #cccccc;">{{ customer_name }}</strong>.<br />
+                Your tickets are attached to this email as a PDF.
+              </p>
+            </td>
+          </tr>
+
+          <!-- Event Banner -->
+          <tr>
+            <td style="background: linear-gradient(135deg, #1a1a1a 0%, #000000 100%); border-left: 1px solid #1a1a1a; border-right: 1px solid #1a1a1a; padding: 32px 40px;">
+              <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td>
+                    <p style="font-size: 11px; font-weight: 600; color: #666666; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 8px;">EVENT</p>
+                    <h2 style="font-family: Poppins, Georgia, serif; font-size: 24px; font-weight: 700; color: #ffffff; margin-bottom: 16px;">
+                      {{ event.title }}
+                    </h2>
+                    <table cellpadding="0" cellspacing="0" border="0">
+                      <tr>
+                        <td style="padding-bottom: 8px;">
+                          <span style="font-size: 14px; color: #808080;">📅&nbsp;&nbsp;</span>
+                          <span style="font-size: 14px; color: #cccccc;">{{ event.event_date|date:"l, F j, Y \a\t g:i A" }}</span>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>
+                          <span style="font-size: 14px; color: #808080;">📍&nbsp;&nbsp;</span>
+                          <span style="font-size: 14px; color: #cccccc;">{{ event.location }}</span>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Order Summary -->
+          <tr>
+            <td style="background-color: #000000; border-left: 1px solid #1a1a1a; border-right: 1px solid #1a1a1a; padding: 0 40px 32px;">
+              <h3 style="font-family: Poppins, Georgia, serif; font-size: 14px; font-weight: 600; color: #666666; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 16px;">
+                Order Summary
+              </h3>
+              <table width="100%" cellpadding="0" cellspacing="0" border="0" style="border: 1px solid #1a1a1a; border-radius: 12px; overflow: hidden;">
+                <tr style="background-color: #1a1a1a;">
+                  <td style="padding: 12px 20px; font-size: 12px; font-weight: 600; color: #666666; text-transform: uppercase; letter-spacing: 1px;">Order No.</td>
+                  <td style="padding: 12px 20px; font-size: 12px; font-weight: 600; color: #666666; text-transform: uppercase; letter-spacing: 1px; text-align: right;">Amount</td>
+                </tr>
+                <tr>
+                  <td style="padding: 16px 20px; border-top: 1px solid #1a1a1a;">
+                    <span style="font-family: 'SF Mono', Consolas, monospace; font-size: 14px; color: #ffffff;">{{ order_number }}</span>
+                  </td>
+                  <td style="padding: 16px 20px; border-top: 1px solid #1a1a1a; text-align: right;">
+                    <span style="font-size: 16px; font-weight: 700; color: #ffffff;">${{ total_amount }}</span>
+                  </td>
+                </tr>
+                {% if payment_reference %}
+                <tr>
+                  <td colspan="2" style="padding: 0 20px 16px; border-top: 1px solid #1a1a1a;">
+                    <span style="font-size: 12px; color: #666666;">Payment Ref: </span>
+                    <span style="font-family: 'SF Mono', Consolas, monospace; font-size: 12px; color: #808080;">{{ payment_reference }}</span>
+                  </td>
+                </tr>
+                {% endif %}
+              </table>
+            </td>
+          </tr>
+
+          <!-- Tickets List -->
+          <tr>
+            <td style="background-color: #000000; border-left: 1px solid #1a1a1a; border-right: 1px solid #1a1a1a; padding: 0 40px 32px;">
+              <h3 style="font-family: Poppins, Georgia, serif; font-size: 14px; font-weight: 600; color: #666666; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 16px;">
+                Your Tickets ({{ tickets|length }})
+              </h3>
+              {% for ticket in tickets %}
+              <table width="100%" cellpadding="0" cellspacing="0" border="0" style="border: 1px solid #1a1a1a; border-radius: 12px; margin-bottom: 12px; overflow: hidden;">
+                <tr style="background-color: #1a1a1a;">
+                  <td style="padding: 16px 20px;">
+                    <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                      <tr>
+                        <td>
+                          <p style="font-size: 12px; color: #666666; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 1px;">{{ ticket.ticket_type.name }}</p>
+                          <p style="font-family: 'SF Mono', Consolas, monospace; font-size: 15px; font-weight: 700; color: #ffffff;">{{ ticket.ticket_number }}</p>
+                        </td>
+                        <td style="text-align: right; vertical-align: top;">
+                          <span style="display: inline-block; background-color: #2d2d2d; border: 1px solid #333333; border-radius: 20px; padding: 4px 12px; font-size: 11px; color: #999999;">
+                            {{ ticket.status|upper }}
+                          </span>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+                <tr style="background-color: #000000;">
+                  <td style="padding: 12px 20px;">
+                    <span style="font-size: 12px; color: #666666;">Holder: </span>
+                    <span style="font-size: 12px; color: #cccccc;">{{ ticket.holder_name }}</span>
+                  </td>
+                </tr>
+              </table>
+              {% endfor %}
+            </td>
+          </tr>
+
+          <!-- Important Notice -->
+          <tr>
+            <td style="background-color: #000000; border-left: 1px solid #1a1a1a; border-right: 1px solid #1a1a1a; padding: 0 40px 32px;">
+              <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #1a1a1a; border: 1px solid #2d2d2d; border-radius: 12px; padding: 0;">
+                <tr>
+                  <td style="padding: 20px;">
+                    <p style="font-size: 13px; font-weight: 600; color: #ffffff; margin-bottom: 8px;">📌 Important Information</p>
+                    <ul style="list-style: none; padding: 0; margin: 0;">
+                      <li style="font-size: 13px; color: #808080; padding: 4px 0;">✓ &nbsp;Your PDF tickets are attached to this email</li>
+                      <li style="font-size: 13px; color: #808080; padding: 4px 0;">✓ &nbsp;Present the QR code at the event entrance</li>
+                      <li style="font-size: 13px; color: #808080; padding: 4px 0;">✓ &nbsp;Keep your ticket accessible on your phone or print it out</li>
+                      <li style="font-size: 13px; color: #808080; padding: 4px 0;">✓ &nbsp;Arrive early to avoid queues</li>
+                    </ul>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- CTA Button -->
+          <tr>
+            <td style="background-color: #000000; border-left: 1px solid #1a1a1a; border-right: 1px solid #1a1a1a; padding: 0 40px 40px; text-align: center;">
+              <a href="{{ frontend_url }}/event"
+                 style="display: inline-block; background-color: #ffffff; color: #000000; font-weight: 700; font-size: 14px; padding: 14px 32px; border-radius: 8px; text-decoration: none; letter-spacing: 0.3px;">
+                View Event Details →
+              </a>
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="background-color: #000000; border: 1px solid #1a1a1a; border-radius: 0 0 16px 16px; border-top: 1px solid #1a1a1a; padding: 24px 40px; text-align: center;">
+              <p style="font-size: 12px; color: #4d4d4d; line-height: 1.6;">
+                This email was sent to <strong style="color: #666666;">{{ order.customer_email }}</strong><br />
+                If you have any questions, please contact the event organizer.<br /><br />
+                <span style="color: #333333;">© {{ event.event_date|date:"Y" }} {{ event.organizer_name|default:"Event Platform" }}. All rights reserved.</span>
+              </p>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+
+</body>
+</html>

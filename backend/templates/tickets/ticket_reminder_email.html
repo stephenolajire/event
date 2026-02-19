@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <title>Reminder: {{ event.title }} is Tomorrow!</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background-color: #0a0a0a;
+      font-family: Inter, system-ui, Arial, sans-serif;
+      color: #ffffff;
+      -webkit-font-smoothing: antialiased;
+    }
+    a { color: #999999; text-decoration: none; }
+    a:hover { color: #ffffff; }
+  </style>
+</head>
+<body style="background-color: #0a0a0a; margin: 0; padding: 0;">
+
+  <!-- Wrapper -->
+  <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #0a0a0a; padding: 40px 16px;">
+    <tr>
+      <td align="center">
+        <table width="600" cellpadding="0" cellspacing="0" border="0" style="max-width: 600px; width: 100%;">
+
+          <!-- Header -->
+          <tr>
+            <td style="background-color: #000000; border: 1px solid #1a1a1a; border-radius: 16px 16px 0 0; padding: 40px 40px 32px; text-align: center;">
+              <div style="display: inline-block; background-color: #1a1a1a; border: 1px solid #333333; border-radius: 50%; width: 64px; height: 64px; line-height: 64px; text-align: center; margin-bottom: 20px;">
+                <span style="font-size: 28px;">🎉</span>
+              </div>
+              <h1 style="font-family: Poppins, Georgia, serif; font-size: 28px; font-weight: 700; color: #ffffff; margin-bottom: 8px; letter-spacing: -0.5px;">
+                It's Almost Time!
+              </h1>
+              <p style="font-size: 16px; color: #808080; line-height: 1.5;">
+                Hey <strong style="color: #cccccc;">{{ customer_name }}</strong>, your event is just around the corner.<br />
+                Here's everything you need to know.
+              </p>
+            </td>
+          </tr>
+
+          <!-- Countdown Banner -->
+          <tr>
+            <td style="background: linear-gradient(135deg, #1a1a1a 0%, #000000 100%); border-left: 1px solid #1a1a1a; border-right: 1px solid #1a1a1a; padding: 32px 40px; text-align: center;">
+              <p style="font-size: 11px; font-weight: 600; color: #666666; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 12px;">HAPPENING TOMORROW</p>
+              <h2 style="font-family: Poppins, Georgia, serif; font-size: 26px; font-weight: 700; color: #ffffff; margin-bottom: 20px;">
+                {{ event.title }}
+              </h2>
+              <table cellpadding="0" cellspacing="0" border="0" align="center">
+                <tr>
+                  <td style="padding: 0 12px; text-align: center;">
+                    <div style="background-color: #1a1a1a; border: 1px solid #2d2d2d; border-radius: 10px; padding: 12px 20px; min-width: 80px;">
+                      <p style="font-size: 13px; color: #808080; margin-bottom: 4px;">📅 Date</p>
+                      <p style="font-size: 14px; font-weight: 600; color: #ffffff;">{{ event.event_date|date:"M j, Y" }}</p>
+                    </div>
+                  </td>
+                  <td style="padding: 0 12px; text-align: center;">
+                    <div style="background-color: #1a1a1a; border: 1px solid #2d2d2d; border-radius: 10px; padding: 12px 20px; min-width: 80px;">
+                      <p style="font-size: 13px; color: #808080; margin-bottom: 4px;">🕐 Time</p>
+                      <p style="font-size: 14px; font-weight: 600; color: #ffffff;">{{ event.event_date|date:"g:i A" }}</p>
+                    </div>
+                  </td>
+                </tr>
+              </table>
+              <p style="margin-top: 16px; font-size: 14px; color: #808080;">
+                📍 &nbsp;{{ event.location }}
+              </p>
+            </td>
+          </tr>
+
+          <!-- Your Tickets -->
+          <tr>
+            <td style="background-color: #000000; border-left: 1px solid #1a1a1a; border-right: 1px solid #1a1a1a; padding: 32px 40px;">
+              <h3 style="font-family: Poppins, Georgia, serif; font-size: 14px; font-weight: 600; color: #666666; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 16px;">
+                Your Tickets
+              </h3>
+              {% for ticket in tickets %}
+              <table width="100%" cellpadding="0" cellspacing="0" border="0" style="border: 1px solid #1a1a1a; border-radius: 12px; margin-bottom: 12px; overflow: hidden;">
+                <tr style="background-color: #1a1a1a;">
+                  <td style="padding: 16px 20px;">
+                    <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                      <tr>
+                        <td>
+                          <p style="font-size: 11px; color: #666666; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 1px;">{{ ticket.ticket_type.name }}</p>
+                          <p style="font-family: 'SF Mono', Consolas, monospace; font-size: 15px; font-weight: 700; color: #ffffff;">{{ ticket.ticket_number }}</p>
+                        </td>
+                        <td style="text-align: right; vertical-align: middle;">
+                          <span style="display: inline-block; background-color: #2d2d2d; border: 1px solid #333333; border-radius: 20px; padding: 4px 12px; font-size: 11px; color: #999999;">
+                            VALID ✓
+                          </span>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+              {% endfor %}
+              <p style="font-size: 12px; color: #4d4d4d; margin-top: 8px;">
+                Your tickets are also attached to this email as a PDF.
+              </p>
+            </td>
+          </tr>
+
+          <!-- Reminders Checklist -->
+          <tr>
+            <td style="background-color: #000000; border-left: 1px solid #1a1a1a; border-right: 1px solid #1a1a1a; padding: 0 40px 32px;">
+              <h3 style="font-family: Poppins, Georgia, serif; font-size: 14px; font-weight: 600; color: #666666; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 16px;">
+                Before You Go
+              </h3>
+              <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #1a1a1a; border: 1px solid #2d2d2d; border-radius: 12px;">
+                <tr>
+                  <td style="padding: 20px;">
+                    <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                      <tr>
+                        <td style="padding: 8px 0; border-bottom: 1px solid #2d2d2d;">
+                          <span style="font-size: 13px; color: #cccccc;">✓ &nbsp;&nbsp;Have your QR code ready (digital or printed)</span>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td style="padding: 8px 0; border-bottom: 1px solid #2d2d2d;">
+                          <span style="font-size: 13px; color: #cccccc;">✓ &nbsp;&nbsp;Arrive early to avoid entrance queues</span>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td style="padding: 8px 0; border-bottom: 1px solid #2d2d2d;">
+                          <span style="font-size: 13px; color: #cccccc;">✓ &nbsp;&nbsp;Check the weather and dress accordingly</span>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td style="padding: 8px 0;">
+                          <span style="font-size: 13px; color: #cccccc;">✓ &nbsp;&nbsp;Charge your phone so your ticket is accessible</span>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- CTA -->
+          <tr>
+            <td style="background-color: #000000; border-left: 1px solid #1a1a1a; border-right: 1px solid #1a1a1a; padding: 0 40px 40px; text-align: center;">
+              <p style="font-size: 18px; color: #ffffff; font-weight: 600; margin-bottom: 20px;">
+                We can't wait to see you there! 🎊
+              </p>
+              <a href="{{ frontend_url }}/event"
+                 style="display: inline-block; background-color: #ffffff; color: #000000; font-weight: 700; font-size: 14px; padding: 14px 32px; border-radius: 8px; text-decoration: none; letter-spacing: 0.3px;">
+                View Event Details →
+              </a>
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="background-color: #000000; border: 1px solid #1a1a1a; border-radius: 0 0 16px 16px; border-top: 1px solid #1a1a1a; padding: 24px 40px; text-align: center;">
+              <p style="font-size: 12px; color: #4d4d4d; line-height: 1.6;">
+                This reminder was sent to <strong style="color: #666666;">{{ order.customer_email }}</strong><br />
+                If you have any questions, please contact the event organizer.<br /><br />
+                <span style="color: #333333;">© {{ event.event_date|date:"Y" }} {{ event.organizer_name|default:"Event Platform" }}. All rights reserved.</span>
+              </p>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+
+</body>
+</html>

@@ -52,7 +52,7 @@ def send_ticket_confirmation_email(order_id):
         
         IMPORTANT: Present the QR code on your ticket at the entrance.
         
-        View your tickets online: {settings.FRONTEND_URL}/my-tickets
+        View your tickets online: {settings.FRONTEND_URL}/event
         
         See you at the event!
         """
