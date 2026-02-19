@@ -30,7 +30,7 @@ const PaymentCallback = () => {
             "Payment successful! Your tickets have been sent to your email.",
           );
           // Redirect to a success page or home after 3 seconds
-          setTimeout(() => navigate("/"), 3000);
+          setTimeout(() => navigate("/event"), 3000);
         } else {
           setStatus("failed");
           setMessage("Payment was not successful. Please try again.");

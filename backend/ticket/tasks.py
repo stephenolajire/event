@@ -1,5 +1,5 @@
 # tickets/tasks.py
-from celery import shared_task
+# from celery import shared_task
 from django.core.mail import EmailMessage
 from django.template.loader import render_to_string
 from django.conf import settings
@@ -7,7 +7,7 @@ from ..qr_codes.models import Order, Ticket
 from .pdf_generator import generate_order_tickets_pdf
 
 
-@shared_task
+# @shared_task
 def send_ticket_confirmation_email(order_id):
     """
     Send ticket confirmation email with PDF tickets attached
@@ -83,7 +83,7 @@ def send_ticket_confirmation_email(order_id):
         return f"Error sending confirmation email: {str(e)}"
 
 
-@shared_task
+# @shared_task
 def send_ticket_reminder_email(event_id):
     """
     Send reminder emails to all ticket holders for an upcoming event
@@ -168,7 +168,7 @@ def send_ticket_reminder_email(event_id):
         return f"Error sending reminder emails: {str(e)}"
 
 
-@shared_task
+# @shared_task
 def generate_and_save_tickets_pdf(order_id):
     """
     Generate PDF tickets and save to media folder
