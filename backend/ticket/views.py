@@ -4,10 +4,9 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.db import transaction
 from django.utils import timezone
-from django.db.models import Sum, Count, Q, F
+from django.db.models import Sum, Count, Q
+from django.conf import settings
 from decimal import Decimal
-from rest_framework import serializers
-
 from django.db import models
 
 from .models import (
@@ -25,21 +24,14 @@ from .serializers import (
 class TicketTypeViewSet(viewsets.ModelViewSet):
     """
     ViewSet for managing ticket types
-    Public can LIST and RETRIEVE for event ticket purchase
-    Only authenticated users can CREATE, UPDATE, DELETE
     """
     queryset = TicketType.objects.all()
     
     def get_permissions(self):
-        """
-        Allow public access to list and retrieve
-        Require authentication for create, update, delete
-        """
+        """Allow public access to list and retrieve ticket types"""
         if self.action in ['list', 'retrieve']:
-            permission_classes = [permissions.AllowAny]
-        else:
-            permission_classes = [permissions.IsAuthenticated]
-        return [permission() for permission in permission_classes]
+            return [permissions.AllowAny()]
+        return [permissions.IsAuthenticated()]
     
     def get_serializer_class(self):
         if self.action in ['create', 'update', 'partial_update']:
@@ -54,20 +46,19 @@ class TicketTypeViewSet(viewsets.ModelViewSet):
         if event_id:
             queryset = queryset.filter(event_id=event_id)
         
-        # Filter by availability (for public ticket purchase)
+        # Filter by availability
         available_only = self.request.query_params.get('available', None)
         if available_only == 'true':
             now = timezone.now()
             queryset = queryset.filter(
                 is_active=True,
-                is_visible=True,  # Only show visible tickets
                 sale_start_date__lte=now,
                 sale_end_date__gte=now
             ).filter(
                 quantity_sold__lt=models.F('quantity_available')
             )
         
-        return queryset.order_by('price')
+        return queryset
     
     @action(detail=True, methods=['post'])
     def add_benefit(self, request, pk=None):
@@ -84,27 +75,21 @@ class TicketTypeViewSet(viewsets.ModelViewSet):
         )
         
         serializer = self.get_serializer(ticket_type)
+        benefit.save()
         return Response(serializer.data)
 
 
 class OrderViewSet(viewsets.ModelViewSet):
     """
     ViewSet for managing ticket orders
-    CREATE is public (for ticket purchase)
-    Other actions require authentication
     """
     queryset = Order.objects.all()
     
     def get_permissions(self):
-        """
-        Allow public access to create orders (ticket purchase)
-        Require authentication for other actions
-        """
+        """Allow unauthenticated users to create orders (public checkout)"""
         if self.action == 'create':
-            permission_classes = [permissions.AllowAny]
-        else:
-            permission_classes = [permissions.IsAuthenticated]
-        return [permission() for permission in permission_classes]
+            return [permissions.AllowAny()]
+        return [permissions.IsAuthenticated()]
     
     def get_serializer_class(self):
         if self.action == 'create':
@@ -229,18 +214,65 @@ class OrderViewSet(viewsets.ModelViewSet):
         return Response(order_serializer.data, status=status.HTTP_201_CREATED)
     
     @action(detail=True, methods=['post'])
-    def confirm_payment(self, request, pk=None):
-        """Confirm payment for an order"""
+    def initialize_payment(self, request, pk=None):
+        """Initialize Paystack payment for an order"""
+        from .payment_handlers import PaystackPaymentHandler
+        
         order = self.get_object()
         
-        order.payment_status = 'successful'
-        order.status = 'completed'
-        order.payment_date = timezone.now()
-        order.payment_method = request.data.get('payment_method', '')
-        order.payment_reference = request.data.get('payment_reference', '')
-        order.save()
+        if order.payment_status == 'successful':
+            return Response(
+                {'error': 'Order already paid'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
         
-        # TODO: Send confirmation email with tickets
+        try:
+            payment_data = PaystackPaymentHandler.initialize_payment(order)
+            return Response(payment_data)
+        except Exception as e:
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+    
+    @action(detail=True, methods=['post'])
+    def confirm_payment(self, request, pk=None):
+        """Confirm payment for an order and create guest"""
+        order = self.get_object()
+        
+        with transaction.atomic():
+            # Update order status
+            order.payment_status = 'successful'
+            order.status = 'completed'
+            order.payment_date = timezone.now()
+            order.payment_method = request.data.get('payment_method', '')
+            order.payment_reference = request.data.get('payment_reference', '')
+            order.save()
+            
+            # Create or get guest for the event
+            from guests.models import Guest
+            guest, created = Guest.objects.get_or_create(
+                event=order.event,
+                email=order.customer_email,
+                defaults={
+                    'name': order.customer_name,
+                    'phone_number': order.customer_phone,
+                    'rsvp_status': 'confirmed',
+                    'invitation_sent': True,
+                    'source': 'ticket_purchase',
+                }
+            )
+            
+            # If guest already exists, update their info
+            if not created:
+                guest.name = order.customer_name
+                guest.phone_number = order.customer_phone or guest.phone_number
+                guest.rsvp_status = 'confirmed'
+                guest.save()
+            
+            # Send confirmation email with tickets
+            from .tasks import send_ticket_confirmation_email
+            send_ticket_confirmation_email.delay(order.id)
         
         serializer = self.get_serializer(order)
         return Response(serializer.data)
@@ -345,17 +377,7 @@ class DiscountCodeViewSet(viewsets.ModelViewSet):
     """
     queryset = DiscountCode.objects.all()
     serializer_class = DiscountCodeSerializer
-    
-    def get_permissions(self):
-        """
-        Allow public access to validate discount codes
-        Require authentication for other actions
-        """
-        if self.action == 'validate_code':
-            permission_classes = [permissions.AllowAny]
-        else:
-            permission_classes = [permissions.IsAuthenticated]
-        return [permission() for permission in permission_classes]
+    permission_classes = [permissions.IsAuthenticated]
     
     @action(detail=False, methods=['post'])
     def validate_code(self, request):
@@ -409,3 +431,142 @@ class DiscountCodeViewSet(viewsets.ModelViewSet):
             'discount_value': discount.discount_value,
             'discount_amount': discount_amount
         })
+
+
+# Webhook Views (Outside viewsets)
+from rest_framework.decorators import api_view, permission_classes
+import hmac
+import hashlib
+import json
+
+@api_view(['POST'])
+@permission_classes([permissions.AllowAny])
+def paystack_webhook(request):
+    """
+    Handle Paystack webhook for payment verification
+    Endpoint: /api/tickets/webhooks/paystack/
+    """
+    
+    # Verify webhook signature
+    signature = request.headers.get('X-Paystack-Signature', '')
+    body = request.body
+    
+    # Compute hash
+    computed_hash = hmac.new(
+        settings.PAYSTACK_SECRET_KEY.encode('utf-8'),
+        body,
+        hashlib.sha512
+    ).hexdigest()
+    
+    if computed_hash != signature:
+        return Response({'error': 'Invalid signature'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    # Parse webhook data
+    try:
+        webhook_data = json.loads(body.decode('utf-8'))
+    except json.JSONDecodeError:
+        return Response({'error': 'Invalid JSON'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    event = webhook_data.get('event')
+    data = webhook_data.get('data', {})
+    
+    # Handle successful charge
+    if event == 'charge.success':
+        reference = data.get('reference')
+        amount = data.get('amount', 0) / 100  # Convert from kobo
+        
+        try:
+            with transaction.atomic():
+                order = Order.objects.select_for_update().get(order_number=reference)
+                
+                # Prevent double processing
+                if order.payment_status == 'successful':
+                    return Response({'status': 'already_processed'})
+                
+                # Verify amount matches
+                if Decimal(str(amount)) != order.total_amount:
+                    return Response({'error': 'Amount mismatch'}, status=status.HTTP_400_BAD_REQUEST)
+                
+                # Update order
+                order.payment_status = 'successful'
+                order.status = 'completed'
+                order.payment_date = timezone.now()
+                order.payment_method = 'paystack'
+                order.payment_reference = reference
+                order.save()
+                
+                # Create/update guest
+                from guests.models import Guest
+                guest, created = Guest.objects.get_or_create(
+                    event=order.event,
+                    email=order.customer_email,
+                    defaults={
+                        'name': order.customer_name,
+                        'phone_number': order.customer_phone,
+                        'rsvp_status': 'confirmed',
+                        'invitation_sent': True,
+                        'source': 'ticket_purchase',
+                    }
+                )
+                
+                if not created:
+                    guest.name = order.customer_name
+                    guest.phone_number = order.customer_phone or guest.phone_number
+                    guest.rsvp_status = 'confirmed'
+                    guest.save()
+                
+                # Send confirmation email
+                from .tasks import send_ticket_confirmation_email
+                send_ticket_confirmation_email(order.id)
+                
+        except Order.DoesNotExist:
+            return Response({'error': 'Order not found'}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
+    return Response({'status': 'success'})
+
+
+@api_view(['GET'])
+@permission_classes([permissions.AllowAny])
+def verify_payment(request):
+    """
+    Verify payment status
+    Endpoint: /api/tickets/verify-payment/?reference=ORD-XXX
+    """
+    from .payment_handlers import PaystackPaymentHandler
+    
+    reference = request.query_params.get('reference')
+    
+    if not reference:
+        return Response({'error': 'Reference required'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    try:
+        # Verify with Paystack
+        verification = PaystackPaymentHandler.verify_payment(reference)
+        
+        if not verification.get('status'):
+            return Response(verification, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Get order
+        order = Order.objects.get(order_number=reference)
+        
+        # Check if payment is successful
+        if verification.get('transaction_status') == 'success':
+            return Response({
+                'status': 'success',
+                'order_status': order.status,
+                'payment_status': order.payment_status,
+                'order_number': order.order_number,
+                'amount': float(order.total_amount),
+            })
+        else:
+            return Response({
+                'status': 'failed',
+                'message': 'Payment not successful',
+            }, status=status.HTTP_400_BAD_REQUEST)
+            
+    except Order.DoesNotExist:
+        return Response({'error': 'Order not found'}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import AOS from "aos";
+import ticketService from "../services/ticketService";
 
 interface CartItem {
   ticket_type_id: number;
@@ -52,7 +53,7 @@ const TicketCheckout = () => {
       setCart(JSON.parse(savedCart));
     } else {
       // Redirect back if no cart
-      navigate("/event");
+      navigate("/");
     }
   }, [navigate]);
 
@@ -130,9 +131,9 @@ const TicketCheckout = () => {
     setIsProcessing(true);
 
     try {
-      // TODO: API call to create order
+      // Create order
       const orderData = {
-        event_id: sessionStorage.getItem("eventId"),
+        event: parseInt(sessionStorage.getItem("eventId") || "0"),
         customer_name: formData.name,
         customer_email: formData.email,
         customer_phone: formData.phone,
@@ -143,24 +144,32 @@ const TicketCheckout = () => {
         discount_code: appliedDiscount?.code,
       };
 
-      console.log("Creating order:", orderData);
+      const order = await ticketService.createOrder(orderData);
 
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      // Initialize Paystack payment
+      const paymentData = await ticketService.initializePayment(order.id);
 
-      // TODO: Initialize payment with Paystack/Stripe
-      // For now, redirect to success page
-      navigate("/event/payment-success");
-    } catch (error) {
+      if (paymentData.status && paymentData.authorization_url) {
+        // Store order reference
+        sessionStorage.setItem("orderReference", order.order_number);
+
+        // Redirect to Paystack payment page
+        window.location.href = paymentData.authorization_url;
+      } else {
+        throw new Error("Failed to initialize payment");
+      }
+    } catch (error: any) {
       console.error("Checkout error:", error);
-      alert("Payment failed. Please try again.");
+      alert(
+        error.response?.data?.message || "Payment failed. Please try again.",
+      );
     } finally {
       setIsProcessing(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-dark pb-12 py-20">
+    <div className="min-h-screen bg-dark py-12">
       <div className="max-w-7xl mx-auto px-4">
         {/* Header */}
         <div className="mb-8">

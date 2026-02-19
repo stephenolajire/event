@@ -200,7 +200,10 @@ const ticketService = {
   createTicketType: async (
     payload: CreateTicketTypePayload,
   ): Promise<TicketType> => {
-    const response = await axiosInstance.post("/ticket/ticket-types/", payload);
+    const response = await axiosInstance.post(
+      "/ticket/ticket-types/",
+      payload,
+    );
     return response.data;
   },
 
@@ -241,6 +244,16 @@ const ticketService = {
     return response.data;
   },
 
+  getPublicTicketTypes: async (eventId: number): Promise<PublicTicketType[]> => {
+    const response = await axiosInstance.get(`/ticket/ticket-types/`, {
+      params: {
+        event: eventId,
+        available: true,
+      },
+    });
+    return response.data.results || response.data;
+  },
+
   // Orders
   getOrders: async (params?: OrderListParams): Promise<Order[]> => {
     const response = await axiosInstance.get("/ticket/orders/", { params });
@@ -254,6 +267,35 @@ const ticketService = {
 
   createOrder: async (payload: CreateOrderPayload): Promise<Order> => {
     const response = await axiosInstance.post("/ticket/orders/", payload);
+    return response.data;
+  },
+
+  initializePayment: async (
+    orderId: number,
+  ): Promise<{
+    status: boolean;
+    authorization_url: string;
+    access_code: string;
+    reference: string;
+  }> => {
+    const response = await axiosInstance.post(
+      `/ticket/orders/${orderId}/initialize_payment/`,
+    );
+    return response.data;
+  },
+
+  verifyPayment: async (
+    reference: string,
+  ): Promise<{
+    status: string;
+    order_status: string;
+    payment_status: string;
+    order_number: string;
+    amount: number;
+  }> => {
+    const response = await axiosInstance.get("/ticket/verify-payment/", {
+      params: { reference },
+    });
     return response.data;
   },
 
@@ -319,16 +361,6 @@ const ticketService = {
     return response.data;
   },
 
-  getPublicTicketTypes: async (eventId: number) => {
-    const response = await axiosInstance.get(`/ticket/ticket-types/`, {
-      params: {
-        event: eventId,
-        available: true,
-      },
-    });
-    return response.data.results || response.data;
-  },
-
   validateDiscountCode: async (data: {
     code: string;
     event_id: number;
@@ -346,13 +378,5 @@ const ticketService = {
     return response.data;
   },
 };
-
-export interface TicketBenefit {
-  id?: number;
-  title: string;
-  description: string;
-  icon: string;
-  order: number;
-}
 
 export default ticketService;

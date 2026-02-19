@@ -271,3 +271,6 @@ LOGGING = {
         },
     },
 }
+
+PAYSTACK_SECRET_KEY = os.environ.get('PAYSTACK_SECRET_KEY')
+USE_TZ = True

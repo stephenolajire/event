@@ -124,6 +124,9 @@ const CreateTicketType = () => {
       return;
     }
 
+    const toISO = (localDatetime: string) =>
+      new Date(localDatetime).toISOString();
+
     const payload: CreateTicketTypePayload = {
       event: parseInt(formData.event),
       name: formData.name,
@@ -131,8 +134,8 @@ const CreateTicketType = () => {
       description: formData.description || undefined,
       price: parseFloat(formData.price),
       quantity_available: parseInt(formData.quantity_available),
-      sale_start_date: formData.sale_start_date,
-      sale_end_date: formData.sale_end_date,
+      sale_start_date: toISO(formData.sale_start_date),
+      sale_end_date: toISO(formData.sale_end_date),
       min_purchase: parseInt(formData.min_purchase) || undefined,
       max_purchase: parseInt(formData.max_purchase) || undefined,
       is_active: formData.is_active,

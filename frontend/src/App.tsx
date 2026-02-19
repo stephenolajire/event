@@ -37,6 +37,7 @@ import MyTickets from "./user-event/MyTicket";
 // import CustomerDashoard from "./user-event/CustomerDashboard"
 import CustomerDashboard from "./user-event/CustomerDashboard";
 import BrowseEvents from "./user-event/BrowseEvent";
+import PaymentCallback from "./user-event/PaymentCallback";
 
 // Create a client
 const queryClient = new QueryClient({
@@ -68,7 +69,7 @@ function App() {
             <Route path="/signup" element={<Signup />} />
 
             {/* Public Event Page (No Auth Required) */}
-            <Route path="/events/:slug/tickets" element={<EventTicketPage />} />
+            <Route path="/event/:slug/tickets" element={<EventTicketPage />} />
             <Route path="/validate-qr/:token" element={<ValidateQR />} />
 
             {/* Organizer-Only Routes */}
@@ -130,6 +131,7 @@ function App() {
               <Route path="tickets" element={<MyTickets />} />
               <Route path="browse-events" element={<BrowseEvents />} />
               <Route path="settings" element={<Settings />} />
+              <Route path="payment/callback" element={<PaymentCallback />} />
             </Route>
 
             {/* Shared Authenticated Routes (Both user types) */}
