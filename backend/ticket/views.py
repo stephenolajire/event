@@ -272,7 +272,7 @@ class OrderViewSet(viewsets.ModelViewSet):
             
             # Send confirmation email with tickets
             from .tasks import send_ticket_confirmation_email
-            send_ticket_confirmation_email.delay(order.id)
+            send_ticket_confirmation_email(order.id)
         
         serializer = self.get_serializer(order)
         return Response(serializer.data)
@@ -553,6 +553,9 @@ def verify_payment(request):
         
         # Check if payment is successful
         if verification.get('transaction_status') == 'success':
+            # Send confirmation email
+            from .tasks import send_ticket_confirmation_email
+            send_ticket_confirmation_email(order.id)
             return Response({
                 'status': 'success',
                 'order_status': order.status,
@@ -560,6 +563,7 @@ def verify_payment(request):
                 'order_number': order.order_number,
                 'amount': float(order.total_amount),
             })
+        
         else:
             return Response({
                 'status': 'failed',

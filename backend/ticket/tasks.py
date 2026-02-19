@@ -3,7 +3,7 @@
 from django.core.mail import EmailMessage
 from django.template.loader import render_to_string
 from django.conf import settings
-from ..qr_codes.models import Order, Ticket
+from .models import Order, Ticket
 from .pdf_generator import generate_order_tickets_pdf
 
 
