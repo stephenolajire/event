@@ -211,3 +211,16 @@ class EventViewSet(viewsets.ModelViewSet):
         
         serializer = EventListSerializer(events, many=True)
         return Response(serializer.data)
+    
+    @action(detail=False, methods=['get'], permission_classes=[AllowAny])
+    def published(self, request):
+        """ 
+        Get all published public events.
+        GET /api/events/published/
+        """
+        events = Event.objects.filter(
+            is_public=True, 
+            status='published'
+        ).order_by('-event_date')
+        serializer = EventListSerializer(events, many=True)
+        return Response(serializer.data)

@@ -147,7 +147,7 @@ const eventService = {
 
   // Get upcoming events
   getUpcomingEvents: async (): Promise<EventDetail[]> => {
-    const response = await axiosInstance.get("/events/upcoming/");
+    const response = await axiosInstance.get("/events/published/");
     return response.data;
   },
 
