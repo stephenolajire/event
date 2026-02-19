@@ -30,7 +30,7 @@ class PaystackPaymentHandler:
             "amount": int(amount_in_ngn * 100),  # Convert to kobo (smallest unit)
             "currency": "NGN",
             "reference": order.order_number,
-            "callback_url": f"{settings.FRONTEND_URL}/payment/callback",
+            "callback_url": f"{settings.FRONTEND_URL}/event/payment/callback",
             "metadata": {
                 "order_id": order.id,
                 "order_number": order.order_number,

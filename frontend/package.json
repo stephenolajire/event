@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@hookform/resolvers": "^3.3.4",
+    "@paystack/inline-js": "^2.22.2",
     "@tailwindcss/vite": "^4.1.18",
     "@tanstack/react-query": "^5.90.20",
     "@tanstack/react-query-devtools": "^5.91.3",
@@ -32,6 +33,7 @@
   "devDependencies": {
     "@types/aos": "^3.0.7",
     "@types/node": "^25.2.1",
+    "@types/paystack__inline-js": "^1.0.2",
     "@types/react": "^18.2.48",
     "@types/react-dom": "^18.2.18",
     "@vitejs/plugin-react": "^4.2.1",

@@ -53,7 +53,7 @@ const TicketCheckout = () => {
       setCart(JSON.parse(savedCart));
     } else {
       // Redirect back if no cart
-      navigate("/");
+      navigate("/event");
     }
   }, [navigate]);
 

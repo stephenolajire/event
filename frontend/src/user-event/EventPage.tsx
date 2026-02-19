@@ -169,7 +169,7 @@ useEffect(() => {
     // Store cart in sessionStorage or state management
     sessionStorage.setItem("cart", JSON.stringify(cart));
     sessionStorage.setItem("eventId", event.id.toString());
-    navigate("/checkout");
+    navigate("/event/checkout");
   };
 
   const getCategoryColor = (category: string) => {

@@ -9,84 +9,79 @@ const PaymentCallback = () => {
   const [status, setStatus] = useState<"loading" | "success" | "failed">(
     "loading",
   );
-  const [message, setMessage] = useState("Verifying your payment...");
+  const [message, setMessage] = useState("");
 
   useEffect(() => {
-    const verifyPayment = async () => {
-      const reference = searchParams.get("reference");
+    const reference = searchParams.get("reference");
 
-      if (!reference) {
-        setStatus("failed");
-        setMessage("Payment reference not found");
-        return;
-      }
+    if (!reference) {
+      setStatus("failed");
+      setMessage("No payment reference found.");
+      return;
+    }
 
+    const verify = async () => {
       try {
         const result = await ticketService.verifyPayment(reference);
 
         if (result.status === "success") {
           setStatus("success");
-          setMessage("Payment successful! Redirecting...");
-
-          // Clear cart and session
-          sessionStorage.removeItem("cart");
-          sessionStorage.removeItem("eventId");
-          sessionStorage.removeItem("orderReference");
-
-          // Redirect to success page after 2 seconds
-          setTimeout(() => {
-            navigate("/payment-success");
-          }, 2000);
+          setMessage(
+            "Payment successful! Your tickets have been sent to your email.",
+          );
+          // Redirect to a success page or home after 3 seconds
+          setTimeout(() => navigate("/"), 3000);
         } else {
           setStatus("failed");
-          setMessage("Payment verification failed");
+          setMessage("Payment was not successful. Please try again.");
         }
-      } catch (error: any) {
-        console.error("Payment verification error:", error);
+      } catch (error) {
         setStatus("failed");
-        setMessage(error.response?.data?.message || "Failed to verify payment");
+        setMessage("Could not verify payment. Please contact support.");
       }
     };
 
-    verifyPayment();
+    verify();
   }, [searchParams, navigate]);
 
   return (
-    <div className="min-h-screen bg-dark flex items-center justify-center p-4">
-      <div className="max-w-md w-full bg-linear-to-br from-dark-light to-dark border border-primary-900 rounded-xl p-8 text-center">
+    <div className="min-h-screen bg-dark flex items-center justify-center">
+      <div className="text-center max-w-md mx-auto px-4">
         {status === "loading" && (
           <>
-            <Loader2 className="w-16 h-16 text-primary-400 animate-spin mx-auto mb-4" />
-            <h2 className="text-2xl font-bold text-light mb-2">
-              Processing Payment
+            <Loader2 className="w-16 h-16 text-primary-600 animate-spin mx-auto mb-4" />
+            <h2 className="font-heading text-2xl font-bold text-light mb-2">
+              Verifying Payment...
             </h2>
-            <p className="text-primary-300">{message}</p>
+            <p className="text-primary-400">
+              Please wait while we confirm your payment.
+            </p>
           </>
         )}
 
         {status === "success" && (
           <>
-            <div className="relative mb-4">
-              <div className="absolute inset-0 bg-green-600 rounded-full blur-2xl opacity-50 animate-pulse" />
-              <CheckCircle className="relative w-16 h-16 text-green-400 mx-auto" />
-            </div>
-            <h2 className="text-2xl font-bold text-light mb-2">
+            <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
+            <h2 className="font-heading text-2xl font-bold text-light mb-2">
               Payment Successful!
             </h2>
-            <p className="text-primary-300">{message}</p>
+            <p className="text-primary-400">{message}</p>
+            <p className="text-sm text-primary-500 mt-2">
+              Redirecting you shortly...
+            </p>
           </>
         )}
 
         {status === "failed" && (
           <>
-            <XCircle className="w-16 h-16 text-red-400 mx-auto mb-4" />
-            <h2 className="text-2xl font-bold text-light mb-2">
+            <XCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
+            <h2 className="font-heading text-2xl font-bold text-light mb-2">
               Payment Failed
             </h2>
-            <p className="text-primary-300 mb-6">{message}</p>
+            <p className="text-primary-400">{message}</p>
             <button
               onClick={() => navigate("/checkout")}
-              className="px-6 py-3 bg-primary-600 hover:bg-primary-700 text-light rounded-lg font-medium transition-all"
+              className="mt-6 px-6 py-3 bg-primary-600 hover:bg-primary-700 text-light rounded-lg font-medium transition-all"
             >
               Try Again
             </button>
